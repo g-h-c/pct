@@ -10,6 +10,7 @@
 #include <iostream>
 #include <stdexcept>
 #include <boost/program_options.hpp>
+#include <sstream>
 
 using namespace std;
 using namespace boost;
@@ -111,23 +112,24 @@ bool subpath(const vector<string> paths, const string& path)
 
 void readOptions(int argc, char** argv)
 {
-        desc_options.add_options()
-        ("input", po::value<vector<string> >(&inputs)->composing(),
-            "Files to parse in search of standard/thirdparty includes, separated by semicolon (as that is how CMake returns lists")
-        ("include,I", po::value<vector<string> >(&includedirs)->composing(),
-            "specify an additional include directory")
-        /*("exclude,E", po::value<vector<string> >(&excludedirs)->composing(),
-            "specify a directory which files will be not included in the precompiled header (nor its subfolders, recursively)")*/
-        ("excludeheader", po::value<vector<string> >(&excludeheaders)->composing(), 
-            "specify a header file that will not be included in the precompiled header. This option is case insensitive.")
-        ("includeheader", po::value<vector<string> >(&includeheaders)->composing(), 
-            "specify a user header that will be included in the precompiled header, even if it was in a system or thirdparty include path")
-        ("sysinclude,S", po::value<vector<string> >(&sysincludedirs)->composing(),
-            "specify an additional system or thirdparty include directory")
-        ("nesting,n", po::value<int>(&nesting)->default_value(0),
-            "specify a new maximal include nesting depth")        
-        ("def,D", po::value<string>(&cxxflags),
-            "macros to be definited. E.g. --def _M_X64")
+	desc_options.add_options()
+		("input", po::value<vector<string> >(&inputs)->composing(),
+		"File to parse in search of standard/thirdparty includes (repeat this option for each file you want to be analyzed to look for standard headers)")
+		("include,I", po::value<vector<string> >(&includedirs)->composing(),
+		"specify an additional include directory")
+		/*("exclude,E", po::value<vector<string> >(&excludedirs)->composing(),
+			"specify a directory which files will be not included in the precompiled header (nor its subfolders, recursively)")*/
+		("excludeheader", po::value<vector<string> >(&excludeheaders)->composing(),
+		"specify a header file that will not be included in the precompiled header. This option is case insensitive.")
+		("includeheader", po::value<vector<string> >(&includeheaders)->composing(),
+		"specify a user header that will be included in the precompiled header, even if it was in a system or thirdparty include path")
+		("sysinclude,S", po::value<vector<string> >(&sysincludedirs)->composing(),
+		"specify an additional system or thirdparty include directory")
+		("nesting,n", po::value<int>(&nesting)->default_value(0),
+		"specify a new maximal include nesting depth")
+		("def,D", po::value<string>(&cxxflags),
+		"macros to be definited. Separated by semicolon E.g. --def _M_X64;_WIN32;WIN32")
+		("help,h", "Produces this help")
 #if BOOST_WAVE_SUPPORT_PRAGMA_ONCE != 0
         ("noguard,G", "disable include guard detection")
 #endif
@@ -144,6 +146,15 @@ void readOptions(int argc, char** argv)
 	}
 
     notify(vm);  
+
+	if (vm.count("help") > 0) {
+		stringstream help_stream;
+		
+		help_stream << "Analyses C / C++ file to generate a precompiled header. The precompiled header will consist of the standard headers that are included in the provided files (or any header included by the files recursively)." << endl;
+		help_stream << desc_options;
+		cout << help_stream.str();
+		exit(EXIT_SUCCESS);
+	}
 
 	for (auto& header : excludeheaders) {
 		strtolower(header);
