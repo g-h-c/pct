@@ -10,6 +10,7 @@ Usage example:
 
 Applied to this file.cpp:
 
+```cpp
 #include <vector>
 #include <QtCore/QAtomicInt>
 #include <quuid.h>
@@ -19,13 +20,18 @@ int main()
 {
   // lots of interesting code here
 }
+```
 
 where myinclude.h is:
+
+```cpp
 #include <array>
 #include <iostream>
+```
 
 will generate this precompiled header:
 
+```cpp
 #ifndef STDAFX_H
 #define STDAFX_H
 #include <array>
@@ -34,7 +40,7 @@ will generate this precompiled header:
 #include <QtCore/QAtomicInt>
 #include <quuid.h>
 #endif
-
+```
 
 
 
