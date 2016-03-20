@@ -258,9 +258,11 @@ void write_stdafx()
 		auto header_it = headersfound.begin();
 
 		while (header_it != headersfound.end()) {
-			if (header_it->find(headername) != string::npos) 
+			if (header_it->find(headername) != string::npos) {
 				cout << "#include " << *header_it << "\n";
-
+				headersfound.erase(header_it);
+				break;
+			}
 			header_it++;
 		}        
     }
