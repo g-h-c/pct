@@ -114,7 +114,9 @@ void readOptions(int argc, char** argv)
 {
 	desc_options.add_options()
 		("input", po::value<vector<string> >(&inputs)->composing(),
-		"File to parse in search of standard/thirdparty includes (repeat this option for each file you want to be analyzed to look for standard headers)")
+		"Files/directory to parse in search of standard/thirdparty includes."
+		"If a directory is specified, all the files of that directory will be parsed. More than one file can be specified if separated by semicolons"
+		"(this option could be specified multiple times)")
 		("include,I", po::value<vector<string> >(&includedirs)->composing(),
 		"specify an additional include directory")
 		/*("exclude,E", po::value<vector<string> >(&excludedirs)->composing(),
@@ -130,9 +132,9 @@ void readOptions(int argc, char** argv)
 		("def,D", po::value<string>(&cxxflags),
 		"macros to be definited. Separated by semicolon E.g. --def _M_X64;_WIN32;WIN32")
 		("help,h", "Produces this help")
-#if BOOST_WAVE_SUPPORT_PRAGMA_ONCE != 0
+/*#if BOOST_WAVE_SUPPORT_PRAGMA_ONCE != 0
         ("noguard,G", "disable include guard detection")
-#endif
+#endif*/
         // it may interesting to be able to specify a directory as input from user 
         // and also to allow an option -r to do it recursively
     ;
@@ -262,7 +264,7 @@ void write_stdafx()
 {
     
     cout << "#ifndef STDAFX_H\n";
-    cout << "#define STDAFX_H\n";
+    cout << "#define STDAFX_H\n";	
     
     for (auto header : systemheaders) {
         string headername = path(header).filename().string();
@@ -300,16 +302,42 @@ void splitInput(vector<string>& files, const string& filesstr)
 	}
 }
 
+vector<string> getAllFilesInDir(const char* dir)
+{
+	path path(dir);
+	directory_iterator end_iter;
+	vector<string> result;
+		
+	if (exists(path) && is_directory(path))
+	{
+		for (directory_iterator dir_iter(path); dir_iter != end_iter; ++dir_iter)
+		{
+			if (is_regular_file(dir_iter->status()))							
+				result.push_back(dir_iter->path().string());			
+		}
+	}
+
+	return result;
+}
+
 int main(int argc, char** argv)
 {       
     readOptions(argc, argv);
-        
-    for (auto input : inputs) {
+	
+
+    for (auto& input : inputs) {
         vector<string> inputList;
         splitInput(inputList, input);
 
-        for (auto filename : inputList) {
-            userheadersqueue.push(filename);
+        for (auto& input_path : inputList) {
+
+			if (is_directory(input_path)) {
+				vector<string> files = getAllFilesInDir(input_path.c_str());
+
+				for (auto& file : files) 
+				     userheadersqueue.push(file);
+			} else
+                userheadersqueue.push(input);
         }
     }
     
