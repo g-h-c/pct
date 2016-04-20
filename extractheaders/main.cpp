@@ -114,7 +114,7 @@ void readOptions(int argc, char** argv)
 {
 	desc_options.add_options()
 		("input", po::value<vector<string> >(&inputs)->composing(),
-		"Files/directory to parse in search of standard/thirdparty includes."
+		"Files/directory to parse in search of standard/thirdparty includes. In case of directories only .c .cc .cpp .cxx files will be parsed (and the headers included in those)"
 		"If a directory is specified, all the files of that directory will be parsed. More than one file can be specified if separated by semicolons"
 		"(this option could be specified multiple times)")
 		("include,I", po::value<vector<string> >(&includedirs)->composing(),
@@ -302,6 +302,28 @@ void splitInput(vector<string>& files, const string& filesstr)
 	}
 }
 
+bool iscplusplusfile(path filepath)
+{
+	const char* extensions[] =
+	{ ".cpp",
+	".cxx",
+	".c",
+	".cc",
+	NULL
+	};
+	const string file_ext = filepath.extension().string();
+	unsigned int pos = 0;
+
+	while (extensions[pos]) {
+		if (file_ext == extensions[pos])
+			return true;
+
+		pos++;
+	}
+
+	return false;
+}
+
 vector<string> getAllFilesInDir(const char* dir)
 {
 	path path(dir);
@@ -312,7 +334,8 @@ vector<string> getAllFilesInDir(const char* dir)
 	{
 		for (directory_iterator dir_iter(path); dir_iter != end_iter; ++dir_iter)
 		{
-			if (is_regular_file(dir_iter->status()))							
+			if (is_regular_file(dir_iter->status()) &&
+				iscplusplusfile(dir_iter->path()))
 				result.push_back(dir_iter->path().string());			
 		}
 	}
@@ -334,8 +357,10 @@ int main(int argc, char** argv)
 			if (is_directory(input_path)) {
 				vector<string> files = getAllFilesInDir(input_path.c_str());
 
-				for (auto& file : files) 
-				     userheadersqueue.push(file);
+				for (auto& file : files) {
+
+					userheadersqueue.push(file);
+				}
 			} else
                 userheadersqueue.push(input);
         }
