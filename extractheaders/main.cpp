@@ -139,12 +139,12 @@ void readOptions(int argc, char** argv)
         // and also to allow an option -r to do it recursively
     ;
 	
-    parsed_options parsed = command_line_parser(argc, argv).options(desc_options).run();
-	
-    try {
+	try {
+        parsed_options parsed = command_line_parser(argc, argv).options(desc_options).run();	    
 		store(parsed, vm);
 	} catch (std::exception& e) {
 		cerr << "Error parsing command line: " << e.what() << endl;
+		exit(EXIT_FAILURE);
 	}
 
     notify(vm);  
@@ -347,6 +347,11 @@ int main(int argc, char** argv)
 {       
     readOptions(argc, argv);
 	
+	cout << "Arguments: " << endl;
+	for (int arg = 0; arg < argc; arg++) {
+		cout << argv[arg] << " "; 
+	}
+	cout << endl;
 
     for (auto& input : inputs) {
         vector<string> inputList;
