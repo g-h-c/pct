@@ -36,7 +36,7 @@ vector<string> excludeheaders;
 // precompiled header, to keep relatives paths, case, etc.
 vector<string> headersfound;
 int nesting;
-string cxxflags;
+vector<string> cxxflags;
 
 string& strtolower(string& str)
 {
@@ -55,18 +55,17 @@ public:
 		opened_include_file(Context const& ctx, std::string relname,
 		std::string absname, bool is_system_include)
 	{
+		path file_path(relname);
+		string filename = strtolower(string(file_path.filename().string()));
+
 		if (find(includeheaders.begin(), includeheaders.end(), relname) != includeheaders.end())
 			systemheaders.insert(relname);
 		else {
-			if (!is_system_include)
-				userheadersqueue.push(relname);
-			else {
-				path file_path(relname);
-				string filename = strtolower(string(file_path.filename().string()));
-				
-
-					if (find(excludeheaders.begin(), excludeheaders.end(), filename) == excludeheaders.end() &&
-						!subpath(excludedirs, absname))
+			if (find(excludeheaders.begin(), excludeheaders.end(), filename) == excludeheaders.end()) {
+				if (!is_system_include)
+					userheadersqueue.push(relname);
+				else
+					if (!subpath(excludedirs, absname))
 						systemheaders.insert(relname);
 			}
 		}		
@@ -122,14 +121,14 @@ void readOptions(int argc, char** argv)
 		/*("exclude,E", po::value<vector<string> >(&excludedirs)->composing(),
 			"specify a directory which files will be not included in the precompiled header (nor its subfolders, recursively)")*/
 		("excludeheader", po::value<vector<string> >(&excludeheaders)->composing(),
-		"specify a header file that will not be included in the precompiled header. This option is case insensitive.")
+		"specify a header file that will not be included in the precompiled header, nor it will be processed. This option is case insensitive.")
 		("includeheader", po::value<vector<string> >(&includeheaders)->composing(),
 		"specify a user header that will be included in the precompiled header, even if it was in a system or thirdparty include path")
 		("sysinclude,S", po::value<vector<string> >(&sysincludedirs)->composing(),
 		"specify an additional system or thirdparty include directory")
 		("nesting,n", po::value<int>(&nesting)->default_value(0),
 		"specify a new maximal include nesting depth")
-		("def,D", po::value<string>(&cxxflags),
+		("def,D", po::value<vector<string>>(&cxxflags)->composing(),
 		"macros to be definited. Separated by semicolon E.g. --def _M_X64;_WIN32;WIN32")
 		("help,h", "Produces this help")
 /*#if BOOST_WAVE_SUPPORT_PRAGMA_ONCE != 0
@@ -206,6 +205,7 @@ void process_file(const string& filename)
     context_type::iterator_type it;
     context_type::iterator_type end;
     bool is_end = false;
+	string cxxflagsstr;
 
     instream.unsetf(std::ios::skipws);
     instr = std::string(std::istreambuf_iterator<char>(instream.rdbuf()),
@@ -224,9 +224,18 @@ void process_file(const string& filename)
 									  support_option_long_long |
 									  support_option_include_guard_detection 
 									 ));
-    ctx.set_max_include_nesting_depth(nesting); // to avoid wave to exit prematurely on iostream.h
+	// it is best not to go too deep, headers like <iostream> on windows
+	// give problem with boost wave
+    ctx.set_max_include_nesting_depth(nesting); 
 	
-    add_macro_definitions(ctx, cxxflags);
+	for (auto& def : cxxflags) {
+		if (cxxflagsstr.empty())
+			cxxflagsstr += def;
+		else
+			cxxflagsstr += ";" + def;
+	}
+
+    add_macro_definitions(ctx, cxxflagsstr);
     add_system_includes(ctx);
     add_user_includes(ctx);
 
@@ -252,10 +261,12 @@ void process_file(const string& filename)
                 << e.description() << std::endl;                        
         }
         catch (boost::wave::cpp_exception const& e) {
-            std::string filename = e.file_name();
-            cerr
-                << filename << "(" << e.line_no() << "): "
-                << e.description() << std::endl;                
+			if (e.get_errorcode() != preprocess_exception::include_nesting_too_deep) {
+				std::string filename = e.file_name();
+				cerr
+					<< filename << "(" << e.line_no() << "): "
+					<< e.description() << std::endl;
+			}
         }            
     } while (!is_end);                            
 }
