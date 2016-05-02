@@ -258,7 +258,8 @@ void process_file(const string& filename)
             std::string filename = e.file_name();
             cerr
                 << filename << "(" << e.line_no() << "): "
-                << e.description() << std::endl;                        
+                << "Lexical error: " << e.description() << std::endl;      
+			break;
         }
         catch (boost::wave::cpp_exception const& e) {
 			if (e.get_errorcode() != preprocess_exception::include_nesting_too_deep) {
