@@ -27,8 +27,10 @@ queue<string> userheadersqueue;
 set<string> systemheaders;
 vector<string> inputs;
 vector<string> includedirs;
+vector<string> includetreedirs;
 vector<string> excludedirs;
 vector<string> sysincludedirs;
+vector<string> sysincludetreedirs;
 vector<string> includeheaders;
 vector<string> excludeheaders;
 // contains the headers inclusion, as they were found
@@ -96,8 +98,66 @@ typedef boost::wave::context<
         boost::wave::iteration_context_policies::load_file_to_string,
         print_opened_include_files<token_type> > context_type;
 
+bool iscplusplusfile(path filepath)
+{
+    const char* extensions[] =
+    { ".cpp",
+    ".cxx",
+    ".c",
+    ".cc",
+    NULL
+    };
+    const string file_ext = filepath.extension().string();
+    unsigned int pos = 0;
 
+    while (extensions[pos]) {
+        if (file_ext == extensions[pos])
+            return true;
 
+        pos++;
+    }
+
+    return false;
+}
+
+// gets all files in a dir (non-recursively)
+vector<string> getAllFilesInDir(const char* dir)
+{
+    path path(dir);
+    directory_iterator end_iter;
+    vector<string> result;
+
+    if (exists(path) && is_directory(path))
+    {
+        for (directory_iterator dir_iter(path); dir_iter != end_iter; ++dir_iter)
+        {
+            if (is_regular_file(dir_iter->status()) &&
+                iscplusplusfile(dir_iter->path()))
+                result.push_back(dir_iter->path().string());
+        }
+    }
+
+    return result;
+}
+
+// gets all dirs in a dir (non-recursively)
+vector<string> getAllDirsInDir(const char* dir)
+{
+    path path(dir);
+    directory_iterator end_iter;
+    vector<string> result;
+
+    if (exists(path) && is_directory(path))
+    {
+        for (directory_iterator dir_iter(path); dir_iter != end_iter; ++dir_iter)
+        {
+            if (is_directory(dir_iter->status()))
+                result.push_back(dir_iter->path().string());
+        }
+    }
+
+    return result;
+}
 
 
 bool subpath(const vector<string> paths, const string& path)
@@ -111,25 +171,29 @@ bool subpath(const vector<string> paths, const string& path)
 
 void readOptions(int argc, char** argv)
 {
-	desc_options.add_options()
-		("input", po::value<vector<string> >(&inputs)->composing(),
-		"Files/directory to parse in search of standard/thirdparty includes. In case of directories only .c .cc .cpp .cxx files will be parsed (and the headers included in those)"
-		"If a directory is specified, all the files of that directory will be parsed. More than one file can be specified if separated by semicolons"
-		"(this option could be specified multiple times)")
-		("include,I", po::value<vector<string> >(&includedirs)->composing(),
-		"specify an additional include directory")
-		/*("exclude,E", po::value<vector<string> >(&excludedirs)->composing(),
-			"specify a directory which files will be not included in the precompiled header (nor its subfolders, recursively)")*/
-		("excludeheader", po::value<vector<string> >(&excludeheaders)->composing(),
-		"specify a header file that will not be included in the precompiled header, nor it will be processed. This option is case insensitive.")
-		("includeheader", po::value<vector<string> >(&includeheaders)->composing(),
-		"specify a user header that will be included in the precompiled header, even if it was in a system or thirdparty include path")
-		("sysinclude,S", po::value<vector<string> >(&sysincludedirs)->composing(),
-		"specify an additional system or thirdparty include directory")
+    desc_options.add_options()
+        ("input", po::value<vector<string> >(&inputs)->composing(),
+         "Files/directory to parse in search of standard/thirdparty includes. In case of directories only .c .cc .cpp .cxx files will be parsed (and the headers included in those)"
+         "If a directory is specified, all the files of that directory will be parsed. More than one file can be specified if separated by semicolons"
+         "(this option could be specified multiple times)")
+        ("include,I", po::value<vector<string> >(&includedirs)->composing(),
+         "specify an additional include directory")
+        ("includetree,I", po::value<vector<string> >(&includetreedirs)->composing(),
+         "same as --include, but the subfolders of the specified folder are searched as well (non-recursively, i.e. only the first level of subfolders)")
+        /*("exclude,E", po::value<vector<string> >(&excludedirs)->composing(),
+            "specify a directory which files will be not included in the precompiled header (nor its subfolders, recursively)")*/
+        ("excludeheader", po::value<vector<string> >(&excludeheaders)->composing(),
+         "specify a header file that will not be included in the precompiled header, nor it will be processed. This option is case insensitive.")
+        ("includeheader", po::value<vector<string> >(&includeheaders)->composing(),
+         "specify a user header that will be included in the precompiled header, even if it was in a system or thirdparty include path")
+        ("sysinclude,S", po::value<vector<string> >(&sysincludedirs)->composing(),
+         "specify an additional system or thirdparty include directory")
+        ("sysincludetree,S", po::value<vector<string> >(&sysincludetreedirs)->composing(),
+         "same as --sysinclude, but the subfolders of the specified folder are searched as well (non-recursively, i.e. only the first level of subfolders). Useful with some frameworks like Qt")
 		("nesting,n", po::value<int>(&nesting)->default_value(0),
-		"specify a new maximal include nesting depth")
+		 "specify maximal include nesting depth (normally should be 0)")
 		("def,D", po::value<vector<string>>(&cxxflags)->composing(),
-		"macros to be definited. Separated by semicolon E.g. --def _M_X64;_WIN32;WIN32")
+		 "macros to be definited. Separated by semicolon E.g. --def _M_X64;_WIN32;WIN32")
 		("help,h", "Produces this help")
 /*#if BOOST_WAVE_SUPPORT_PRAGMA_ONCE != 0
         ("noguard,G", "disable include guard detection")
@@ -183,6 +247,18 @@ void add_macro_definitions(context_type& context, const string& cxx_flags)
 
 void add_system_includes(context_type& ctx)
 {
+    for (auto& sysdir : sysincludetreedirs) {
+
+        if (is_directory(sysdir)) {
+            vector<string> dirs = getAllDirsInDir(sysdir.c_str());
+
+            for (auto& dir : dirs) {
+
+                sysincludedirs.push_back(dir);
+            }
+        }        
+    }
+
     for (auto dir : sysincludedirs)  {
         ctx.add_sysinclude_path(dir.c_str());
     }
@@ -190,6 +266,18 @@ void add_system_includes(context_type& ctx)
 
 void add_user_includes(context_type& ctx)
 {
+    for (auto& userdir : includetreedirs) {
+
+        if (is_directory(userdir)) {
+            vector<string> dirs = getAllDirsInDir(userdir.c_str());
+
+            for (auto& dir : dirs) {
+
+                includedirs.push_back(dir);
+            }
+        }
+    }
+
      for (auto dir : includedirs)  {
         ctx.add_include_path(dir.c_str());
     }
@@ -314,46 +402,6 @@ void splitInput(vector<string>& files, const string& filesstr)
 	}
 }
 
-bool iscplusplusfile(path filepath)
-{
-	const char* extensions[] =
-	{ ".cpp",
-	".cxx",
-	".c",
-	".cc",
-	NULL
-	};
-	const string file_ext = filepath.extension().string();
-	unsigned int pos = 0;
-
-	while (extensions[pos]) {
-		if (file_ext == extensions[pos])
-			return true;
-
-		pos++;
-	}
-
-	return false;
-}
-
-vector<string> getAllFilesInDir(const char* dir)
-{
-	path path(dir);
-	directory_iterator end_iter;
-	vector<string> result;
-		
-	if (exists(path) && is_directory(path))
-	{
-		for (directory_iterator dir_iter(path); dir_iter != end_iter; ++dir_iter)
-		{
-			if (is_regular_file(dir_iter->status()) &&
-				iscplusplusfile(dir_iter->path()))
-				result.push_back(dir_iter->path().string());			
-		}
-	}
-
-	return result;
-}
 
 int main(int argc, char** argv)
 {       
