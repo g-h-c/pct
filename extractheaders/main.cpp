@@ -195,6 +195,7 @@ void readOptions(int argc, char** argv)
 		 "specify maximal include nesting depth (normally should be 0)")
 		("def,D", po::value<vector<string>>(&cxxflags)->composing(),
 		 "macros to be definited. Separated by semicolon E.g. --def _M_X64;_WIN32;WIN32")
+		 ("pragma", "If specified, #pragma once will be added to the output, instead of the include guards")
 		 ("output,o", po::value<string>(&outputfile)->default_value("stdafx.h"),
 		 "output file")
 		("help,h", "Produces this help")
@@ -365,10 +366,22 @@ void process_file(const string& filename)
 
 void write_stdafx()
 {
-    
-    cout << "#ifndef STDAFX_H\n";
-    cout << "#define STDAFX_H\n";	
-    
+	path outputpath(outputfile);
+	string guardname = outputpath.filename().string();
+	size_t dotpos = guardname.find_first_of(".");
+	
+	guardname = guardname.substr(0, dotpos);
+
+	for (auto & c : guardname)
+		c = toupper(c);
+		
+	if (vm.count("pragma") > 0) 
+        cout << "#pragma once\n";    
+	else {
+		cout << "#ifndef " + guardname + "_H\n";
+		cout << "#define " + guardname + "_H\n";
+	}    
+
     for (auto header : systemheaders) {
         string headername = path(header).filename().string();
 		auto header_it = headersfound.begin();
@@ -382,9 +395,9 @@ void write_stdafx()
 			header_it++;
 		}        
     }
-    cout << "#endif\n";
 
-
+	if (vm.count("pragma") == 0) 
+        cout << "#endif\n";
 }
 
 void splitInput(vector<string>& files, const string& filesstr)
