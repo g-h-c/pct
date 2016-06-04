@@ -39,6 +39,7 @@ vector<string> excludeheaders;
 vector<string> headersfound;
 int nesting;
 vector<string> cxxflags;
+string outputfile;
 
 string& strtolower(string& str)
 {
@@ -194,6 +195,8 @@ void readOptions(int argc, char** argv)
 		 "specify maximal include nesting depth (normally should be 0)")
 		("def,D", po::value<vector<string>>(&cxxflags)->composing(),
 		 "macros to be definited. Separated by semicolon E.g. --def _M_X64;_WIN32;WIN32")
+		 ("output,o", po::value<string>(&outputfile)->default_value("stdafx.h"),
+		 "output file")
 		("help,h", "Produces this help")
 /*#if BOOST_WAVE_SUPPORT_PRAGMA_ONCE != 0
         ("noguard,G", "disable include guard detection")
@@ -405,6 +408,8 @@ void splitInput(vector<string>& files, const string& filesstr)
 
 int main(int argc, char** argv)
 {       
+	ofstream out;		
+
     readOptions(argc, argv);
 	
 	cout << "Arguments: " << endl;
@@ -412,6 +417,15 @@ int main(int argc, char** argv)
 		cout << argv[arg] << " "; 
 	}
 	cout << endl;
+
+	out = ofstream(outputfile);
+
+	if (!out.is_open()) {
+		cerr << "Cannot open: " << outputfile;
+	    exit(EXIT_FAILURE);
+    }
+
+	cout.rdbuf(out.rdbuf());
 
     for (auto& input : inputs) {
         vector<string> inputList;
