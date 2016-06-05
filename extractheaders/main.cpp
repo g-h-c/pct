@@ -11,6 +11,7 @@
 #include <stdexcept>
 #include <boost/program_options.hpp>
 #include <sstream>
+#include <functional>
 
 using namespace std;
 using namespace boost;
@@ -23,10 +24,10 @@ namespace po = boost::program_options;
 boost::program_options::options_description desc_options;
 boost::program_options::variables_map vm;
 queue<string> userheadersqueue;
-set<string> headersprocessed;
+set<path> headersprocessed;
 
 // system or thirdparty headers
-set<string> systemheaders;
+set<path> systemheaders;
 vector<string> inputs;
 vector<string> includedirs;
 vector<string> includetreedirs;
@@ -392,7 +393,7 @@ void write_stdafx()
 	}    
 
     for (auto header : systemheaders) {
-        string headername = path(header).filename().string();
+        string headername = header.filename().string();
 		auto header_it = headersfound.begin();
 
 		while (header_it != headersfound.end()) {
@@ -427,6 +428,10 @@ void splitInput(vector<string>& files, const string& filesstr)
 	}
 }
 
+bool equivalentpaths(const path& lhs, const path& rhs)
+{
+    return boost::filesystem::equivalent(lhs, rhs);
+}
 
 int main(int argc, char** argv)
 {       
@@ -474,12 +479,18 @@ int main(int argc, char** argv)
     }
     
     while (!userheadersqueue.empty()) {
-        string header = userheadersqueue.front();
+        string header = userheadersqueue.front();        
+        bool alreadyprocessed = false;
 
-		if (headersprocessed.find(header) == headersprocessed.end()) {
+        try {
+            alreadyprocessed = find_if(headersprocessed.begin(), headersprocessed.end(), std::bind(equivalentpaths, path(header), std::placeholders::_1)) != headersprocessed.end();
+        } catch (boost::filesystem::filesystem_error& e) {
+        }
+
+        if (!alreadyprocessed) {
 			process_file(header);
 			headersprocessed.insert(header);
-		}
+        }
 
         userheadersqueue.pop();
     }
