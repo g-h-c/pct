@@ -23,6 +23,8 @@ namespace po = boost::program_options;
 boost::program_options::options_description desc_options;
 boost::program_options::variables_map vm;
 queue<string> userheadersqueue;
+set<string> headersprocessed;
+
 // system or thirdparty headers
 set<string> systemheaders;
 vector<string> inputs;
@@ -473,7 +475,12 @@ int main(int argc, char** argv)
     
     while (!userheadersqueue.empty()) {
         string header = userheadersqueue.front();
-        process_file(header);
+
+		if (headersprocessed.find(header) == headersprocessed.end()) {
+			process_file(header);
+			headersprocessed.insert(header);
+		}
+
         userheadersqueue.pop();
     }
     write_stdafx();
