@@ -42,7 +42,8 @@ will generate this precompiled header:
 
 extractheaders can be easily integrated with qmake. Imagine the previous example was built with this .pro file:
 
-```HEADERS += myinclude.h
+```cpp
+HEADERS += myinclude.h
 SOURCES += file.cpp
 INCLUDEPATH += "."
 
@@ -56,10 +57,18 @@ for (it, INCLUDEPATH) {
 	INCLUDE_ARGUMENTS += --include \"$$PWD/$${it}\"
 }
 
-system(extractheaders --sysinclude \"c:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\include\" --sysincludetree C:\Qt\Qt5.6.0\5.6\msvc2013_64\include --def "_WIN32;WIN32;_M_X64;_IOSTREAM_" $$INPUT_ARGUMENTS $$INCLUDE_ARGUMENTS)```
+system(extractheaders --sysinclude \"c:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\include\" --sysincludetree C:\Qt\Qt5.6.0\5.6\msvc2013_64\include --def "_WIN32;WIN32;_M_X64;_IOSTREAM_" $$INPUT_ARGUMENTS $$INCLUDE_ARGUMENTS)
+```
 
 system() will invoke extractheaders in this case, generating the appropiate stdafx.h. The first two loops will generate the necessary arguments that the tool needs.
 
+**Troubleshooting**
+
+error: could not find include file: windows.h
+Add the path to Windows SDK user mode header files, usually at: the C:\Program Files (x86)\Windows Kits\8.1\Include\um
+
+Could not find include file even if it is one of the specified include directories
+This may be caused by trying to include a system header using quotes, e.g. #include "string.h" or trying to include a user header using angle brackets, e.g. #include <myinclude.h>. Best solution would be to be consistent with this convention.
 
 
 
