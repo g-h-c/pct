@@ -57,7 +57,7 @@ for (it, INCLUDEPATH) {
 	INCLUDE_ARGUMENTS += --include \"$$PWD/$${it}\"
 }
 
-system(extractheaders --sysinclude \"c:\\Program Files (x86)\\Microsoft Visual Studio 12.0\\VC\\include\" --sysincludetree C:\Qt\Qt5.6.0\5.6\msvc2013_64\include --def "_WIN32;WIN32;_M_X64;_IOSTREAM_" $$INPUT_ARGUMENTS $$INCLUDE_ARGUMENTS)
+system(extractheaders --sysinclude \"c:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\include\" --sysincludetree C:\Qt\Qt5.6.0\5.6\msvc2013_64\include --def "_WIN32;WIN32;_M_X64;_IOSTREAM_" $$INPUT_ARGUMENTS $$INCLUDE_ARGUMENTS)
 ```
 
 system() will invoke extractheaders in this case, generating the appropiate stdafx.h. The first two loops will generate the necessary arguments that the tool needs.
