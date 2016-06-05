@@ -195,9 +195,10 @@ void readOptions(int argc, char** argv)
 		 "specify maximal include nesting depth (normally should be 0)")
 		("def,D", po::value<vector<string>>(&cxxflags)->composing(),
 		 "macros to be definited. Separated by semicolon E.g. --def _M_X64;_WIN32;WIN32")
-		 ("pragma", "If specified, #pragma once will be added to the output, instead of the include guards")
+		("pragma", "If specified, #pragma once will be added to the output, instead of the include guards")
 		 ("output,o", po::value<string>(&outputfile)->default_value("stdafx.h"),
-		 "output file")
+		  "output file")
+		("verbose", "Verbose output")
 		("help,h", "Produces this help")
 /*#if BOOST_WAVE_SUPPORT_PRAGMA_ONCE != 0
         ("noguard,G", "disable include guard detection")
@@ -253,6 +254,8 @@ void add_system_includes(context_type& ctx)
 {
     for (auto& sysdir : sysincludetreedirs) {
 
+		sysincludedirs.push_back(sysdir);
+
         if (is_directory(sysdir)) {
             vector<string> dirs = getAllDirsInDir(sysdir.c_str());
 
@@ -260,7 +263,7 @@ void add_system_includes(context_type& ctx)
 
                 sysincludedirs.push_back(dir);
             }
-        }        
+        }        		
     }
 
     for (auto dir : sysincludedirs)  {
@@ -271,6 +274,8 @@ void add_system_includes(context_type& ctx)
 void add_user_includes(context_type& ctx)
 {
     for (auto& userdir : includetreedirs) {
+
+		includedirs.push_back(userdir);
 
         if (is_directory(userdir)) {
             vector<string> dirs = getAllDirsInDir(userdir.c_str());
@@ -302,9 +307,11 @@ void process_file(const string& filename)
     instream.unsetf(std::ios::skipws);
     instr = std::string(std::istreambuf_iterator<char>(instream.rdbuf()),
         std::istreambuf_iterator<char>());    
-    std::cerr << "Preprocessing input file: " << filename
-              << "..." << std::endl;
-    
+
+	if (vm.count("verbose") > 0) 
+		std::cerr << "Preprocessing input file: " << filename
+			      << "..." << std::endl;
+	
     context_type ctx(instr.begin(), instr.end(), filename.c_str(),
                      print_opened_include_files <token_type>());
        
@@ -376,7 +383,7 @@ void write_stdafx()
 		c = toupper(c);
 		
 	if (vm.count("pragma") > 0) 
-        cout << "#pragma once\n";    
+        cout << "#pragma once\n\n";    
 	else {
 		cout << "#ifndef " + guardname + "_H\n";
 		cout << "#define " + guardname + "_H\n";
@@ -425,11 +432,13 @@ int main(int argc, char** argv)
 
     readOptions(argc, argv);
 	
-	cout << "Arguments: " << endl;
-	for (int arg = 0; arg < argc; arg++) {
-		cout << argv[arg] << " "; 
+	if (vm.count("verbose") > 0) {
+		cout << "Arguments: " << endl;
+		for (int arg = 0; arg < argc; arg++) {
+			cout << argv[arg] << " ";
+		}
+		cout << endl;
 	}
-	cout << endl;
 
 	out = ofstream(outputfile);
 
@@ -453,7 +462,11 @@ int main(int argc, char** argv)
 
 					userheadersqueue.push(file);
 				}
-			} else
+			} else if (!exists(input_path)) {
+				cerr << "Cannot find: " << input_path << "\n";
+				exit(EXIT_FAILURE);
+			}
+			else
                 userheadersqueue.push(input);
         }
     }
