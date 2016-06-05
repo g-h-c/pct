@@ -68,7 +68,7 @@ Add the path to Windows SDK user mode header files, for instance with: --sysincl
 
 > Could not find include file even if it is one of the specified include directories
 
-This may be caused by trying to include a system header using quotes, e.g. #include "string.h" or trying to include a user header using angle brackets, e.g. #include \<myinclude.h\>. Best solution would be to be consistent with this convention.
+This may be caused by trying to include a system header using quotes, e.g. #include "string.h" or trying to include a user header using angle brackets, e.g. #include \<myinclude.h\>. Best solution would be to be consistent with the normal convention, use quotes for user headers and angle bracket for system headers.
 
 
 
