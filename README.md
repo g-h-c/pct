@@ -1,6 +1,6 @@
 # pct
 
-Pct (PreCompiled header tool) aims to be a bag of tools to help reducing and analyzing C/C++ compilation times. There is only one tool for now, extractheaders.
+Pct (PreCompiled header tool) aims to be a bag of tools to help reducing and analysing C/C++ compilation times. There is only one tool for now, extractheaders.
 
 ##extractheaders
 
