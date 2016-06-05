@@ -64,10 +64,10 @@ system() will invoke extractheaders in this case, generating the appropiate stda
 
 **Troubleshooting**
 
-error: could not find include file: windows.h
+> error: could not find include file: windows.h
 Add the path to Windows SDK user mode header files, usually at: the C:\Program Files (x86)\Windows Kits\8.1\Include\um
 
-Could not find include file even if it is one of the specified include directories
+> Could not find include file even if it is one of the specified include directories
 This may be caused by trying to include a system header using quotes, e.g. #include "string.h" or trying to include a user header using angle brackets, e.g. #include <myinclude.h>. Best solution would be to be consistent with this convention.
 
 
