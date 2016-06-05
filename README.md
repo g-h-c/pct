@@ -68,6 +68,7 @@ system() will invoke extractheaders in this case, generating the appropiate stda
 Requires boost libraries and C++ 11 compliant compiler. The least Boost version I tried was 1.58.0.
 
 **Blog entry**
+
 https://cppisland.wordpress.com/2016/06/05/introducing-pct-a-tool-to-help-reducing-cc-compilation-times/
 
 **Troubleshooting**
