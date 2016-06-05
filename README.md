@@ -64,6 +64,9 @@ system(extractheaders --sysinclude \"c:\\Program Files (x86)\\Microsoft Visual S
 
 system() will invoke extractheaders in this case, generating the appropiate stdafx.h. The first two loops will generate the necessary arguments that the tool needs.
 
+**Compilation**
+Requires boost libraries and C++ 11 compliant compiler. The least Boost version I tried was 1.58.0.
+
 **Troubleshooting**
 
 > error: could not find include file: windows.h
