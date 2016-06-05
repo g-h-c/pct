@@ -1,4 +1,8 @@
-"# pct"
+# pct
+
+Pct (PreCompiled header tool) aims to be a bag of tools to help reducing and analyzing C/C++ compilation times. There is only one tool for now, extractheaders.
+
+##extractheaders
 
 Analyses C / C++ file to generate a precompiled header. The precompiled header will consist of the standard headers that are included in the provided files (or any header included by the files recursively). It uses Boost Wave Preprocessor to do so.
 
