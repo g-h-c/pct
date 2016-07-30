@@ -54,6 +54,7 @@ void VsParsing::parse(vector<ProjectConfiguration>& configurations,
 			if (label == "'$(Configuration)|$(Platform)'=='" + configuration.name + "'") {
 				XMLElement* clCompile = itemDefinitionGroup->FirstChildElement("ClCompile");
 				XMLElement* definitions = clCompile? clCompile->FirstChildElement("PreprocessorDefinitions") : NULL;
+				XMLElement* includeDirs = clCompile ? clCompile->FirstChildElement("AdditionalIncludeDirectories") : NULL;
 
 				if (definitions) {
 					configuration.definitions = definitions->FirstChild()->ToText()->Value();
@@ -62,6 +63,10 @@ void VsParsing::parse(vector<ProjectConfiguration>& configurations,
 					configuration.definitions = regex_replace(configuration.definitions, regex("%\\(.*\\)"), string(""));
 					
 				}
+
+				if (includeDirs) 
+					configuration.additionalIncludeDirectories = includeDirs->FirstChild()->ToText()->Value();
+				
 			}
 			itemDefinitionGroup = itemDefinitionGroup->NextSiblingElement("ItemDefinitionGroup");
 		}
