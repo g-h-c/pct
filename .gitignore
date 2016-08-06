@@ -1,0 +1,6 @@
+extractheaders/x64/
+x64/
+ipch/
+*.suo
+*.opendb
+*.db
