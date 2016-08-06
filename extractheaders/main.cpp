@@ -69,7 +69,7 @@ public:
 		else {
 			if (find(excludeheaders.begin(), excludeheaders.end(), filename) == excludeheaders.end()) {
 				if (!is_system_include)
-					userheadersqueue.push(relname);
+					userheadersqueue.push(absname);
 				else
 					if (!subpath(excludedirs, absname))
 						systemheaders.insert(relname);
