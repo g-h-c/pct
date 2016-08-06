@@ -23,13 +23,13 @@ namespace po = boost::program_options;
 
 boost::program_options::options_description desc_options;
 boost::program_options::variables_map vm;
-queue<string> userheadersqueue;
+queue<path> userheadersqueue;
 set<path> headersprocessed;
 
 // system or thirdparty headers
 set<path> systemheaders;
 vector<string> inputs;
-vector<string> includedirs;
+set<path> includedirs;
 vector<string> includetreedirs;
 vector<string> excludedirs;
 vector<string> sysincludedirs;
@@ -69,7 +69,7 @@ public:
 		else {
 			if (find(excludeheaders.begin(), excludeheaders.end(), filename) == excludeheaders.end()) {
 				if (!is_system_include)
-					userheadersqueue.push(absname);
+					userheadersqueue.push(boost::filesystem::canonical(absname));
 				else
 					if (!subpath(excludedirs, absname))
 						systemheaders.insert(relname);
@@ -175,12 +175,13 @@ bool subpath(const vector<string> paths, const string& path)
 
 void readOptions(int argc, char** argv)
 {
+	std::vector<std::string> includedirsIn;
     desc_options.add_options()
         ("input", po::value<vector<string> >(&inputs)->composing(),
          "Files/directory to parse in search of standard/thirdparty includes. In case of directories only .c .cc .cpp .cxx files will be parsed (and the headers included in those)"
          "If a directory is specified, all the files of that directory will be parsed. More than one file can be specified if separated by semicolons"
          "(this option could be specified multiple times)")
-        ("include,I", po::value<vector<string> >(&includedirs)->composing(),
+        ("include,I", po::value<vector<string> >(&includedirsIn)->composing(),
          "specify an additional include directory")
         ("includetree,I", po::value<vector<string> >(&includetreedirs)->composing(),
          "same as --include, but the subfolders of the specified folder are searched as well (non-recursively, i.e. only the first level of subfolders)")
@@ -232,6 +233,11 @@ void readOptions(int argc, char** argv)
 	for (auto& header : excludeheaders) {
 		strtolower(header);
 	}
+
+	for (const auto& includeDir : includedirsIn)
+	{
+		includedirs.insert(boost::filesystem::canonical(includeDir));
+	}
 }
 
 void add_macro_definitions(context_type& context, const string& cxx_flags)
@@ -278,29 +284,29 @@ void add_user_includes(context_type& ctx)
 {
     for (auto& userdir : includetreedirs) {
 
-		includedirs.push_back(userdir);
+		includedirs.insert(boost::filesystem::canonical(userdir));
 
         if (is_directory(userdir)) {
             vector<string> dirs = getAllDirsInDir(userdir.c_str());
 
             for (auto& dir : dirs) {
 
-                includedirs.push_back(dir);
+                includedirs.insert(boost::filesystem::canonical(dir));
             }
         }
     }
 
      for (auto dir : includedirs)  {
-        ctx.add_include_path(dir.c_str());
+        ctx.add_include_path(dir.string().c_str());
     }
 }
 
-void process_file(const string& filename)
+void process_file(const path& filename)
 {
 //  create the wave::context object and initialize it from the file to
 //  preprocess (may contain options inside of special comments)
-    
-    std::ifstream instream(filename.c_str());
+
+    std::ifstream instream(filename.string().c_str());
     string instr;
     context_type::iterator_type it;
     context_type::iterator_type end;
@@ -312,10 +318,10 @@ void process_file(const string& filename)
         std::istreambuf_iterator<char>());    
 
 	if (vm.count("verbose") > 0) 
-		std::cerr << "Preprocessing input file: " << filename
+		std::cerr << "Preprocessing input file: " << filename.generic_string()
 			      << "..." << std::endl;
-	
-    context_type ctx(instr.begin(), instr.end(), filename.c_str(),
+
+    context_type ctx(instr.begin(), instr.end(), filename.string().c_str(),
                      print_opened_include_files <token_type>());
        
     //  add special predefined macros
@@ -428,11 +434,6 @@ void splitInput(vector<string>& files, const string& filesstr)
 	}
 }
 
-bool equivalentpaths(const path& lhs, const path& rhs)
-{
-    return boost::filesystem::equivalent(lhs, rhs);
-}
-
 int main(int argc, char** argv)
 {       
 	ofstream out;		
@@ -467,27 +468,21 @@ int main(int argc, char** argv)
 
 				for (auto& file : files) {
 
-					userheadersqueue.push(file);
+					userheadersqueue.push(boost::filesystem::canonical(file));
 				}
 			} else if (!exists(input_path)) {
 				cerr << "Cannot find: " << input_path << "\n";
 				exit(EXIT_FAILURE);
 			}
 			else
-                userheadersqueue.push(input);
+                userheadersqueue.push(boost::filesystem::canonical(input));
         }
     }
-    
+
+	cerr << "Processing " << userheadersqueue.size() << " reported includes" << std::endl;
     while (!userheadersqueue.empty()) {
-        string header = userheadersqueue.front();        
-        bool alreadyprocessed = false;
-
-        try {
-            alreadyprocessed = find_if(headersprocessed.begin(), headersprocessed.end(), std::bind(equivalentpaths, path(header), std::placeholders::_1)) != headersprocessed.end();
-        } catch (boost::filesystem::filesystem_error& e) {
-        }
-
-        if (!alreadyprocessed) {
+        path header = userheadersqueue.front();
+        if (headersprocessed.count(header) == 0) {
 			process_file(header);
 			headersprocessed.insert(header);
         }
