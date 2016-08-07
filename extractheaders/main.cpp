@@ -74,20 +74,20 @@ public:
 					if (!subpath(excludedirs, absname))
 						systemheaders.insert(relname);
 			}
-		}		
+		}
 	}
 
 	template <typename Context>
 	void
 		detected_include_guard(Context const& ctx, std::string const& filename,
 		std::string const& include_guard)
-	{		
+	{
 	}
 
 	template <typename Context>
 	bool found_include_directive(Context const& ctx,
 		std::string const &filename, bool include_next)
-	{		
+	{
 		headersfound.push_back(filename);
 		return false;
 	}
@@ -98,103 +98,103 @@ public:
 typedef boost::wave::cpplexer::lex_token<> token_type;
 typedef boost::wave::cpplexer::lex_iterator<token_type> lexer_type;
 typedef boost::wave::context<
-        std::string::const_iterator, lexer_type,
-        boost::wave::iteration_context_policies::load_file_to_string,
-        print_opened_include_files<token_type> > context_type;
+		std::string::const_iterator, lexer_type,
+		boost::wave::iteration_context_policies::load_file_to_string,
+		print_opened_include_files<token_type> > context_type;
 
 bool iscplusplusfile(path filepath)
 {
-    const char* extensions[] =
-    { ".cpp",
-    ".cxx",
-    ".c",
-    ".cc",
-    NULL
-    };
-    const string file_ext = filepath.extension().string();
-    unsigned int pos = 0;
+	const char* extensions[] =
+	{ ".cpp",
+	".cxx",
+	".c",
+	".cc",
+	NULL
+	};
+	const string file_ext = filepath.extension().string();
+	unsigned int pos = 0;
 
-    while (extensions[pos]) {
-        if (file_ext == extensions[pos])
-            return true;
+	while (extensions[pos]) {
+		if (file_ext == extensions[pos])
+			return true;
 
-        pos++;
-    }
+		pos++;
+	}
 
-    return false;
+	return false;
 }
 
 // gets all files in a dir (non-recursively)
 vector<string> getAllFilesInDir(const char* dir)
 {
-    path path(dir);
-    directory_iterator end_iter;
-    vector<string> result;
+	path path(dir);
+	directory_iterator end_iter;
+	vector<string> result;
 
-    if (exists(path) && is_directory(path))
-    {
-        for (directory_iterator dir_iter(path); dir_iter != end_iter; ++dir_iter)
-        {
-            if (is_regular_file(dir_iter->status()) &&
-                iscplusplusfile(dir_iter->path()))
-                result.push_back(dir_iter->path().string());
-        }
-    }
+	if (exists(path) && is_directory(path))
+	{
+		for (directory_iterator dir_iter(path); dir_iter != end_iter; ++dir_iter)
+		{
+			if (is_regular_file(dir_iter->status()) &&
+				iscplusplusfile(dir_iter->path()))
+				result.push_back(dir_iter->path().string());
+		}
+	}
 
-    return result;
+	return result;
 }
 
 // gets all dirs in a dir (non-recursively)
 vector<string> getAllDirsInDir(const char* dir)
 {
-    path path(dir);
-    directory_iterator end_iter;
-    vector<string> result;
+	path path(dir);
+	directory_iterator end_iter;
+	vector<string> result;
 
-    if (exists(path) && is_directory(path))
-    {
-        for (directory_iterator dir_iter(path); dir_iter != end_iter; ++dir_iter)
-        {
-            if (is_directory(dir_iter->status()))
-                result.push_back(dir_iter->path().string());
-        }
-    }
+	if (exists(path) && is_directory(path))
+	{
+		for (directory_iterator dir_iter(path); dir_iter != end_iter; ++dir_iter)
+		{
+			if (is_directory(dir_iter->status()))
+				result.push_back(dir_iter->path().string());
+		}
+	}
 
-    return result;
+	return result;
 }
 
 
 bool subpath(const vector<string> paths, const string& path)
 {
-    return false;
-    /*// TODO GerardoHernandez
-    assert(false);
-    return false;*/
+	return false;
+	/*// TODO GerardoHernandez
+	assert(false);
+	return false;*/
 }
 
 
 void readOptions(int argc, char** argv)
 {
 	std::vector<std::string> includedirsIn;
-    desc_options.add_options()
-        ("input", po::value<vector<string> >(&inputs)->composing(),
-         "Files/directory to parse in search of standard/thirdparty includes. In case of directories only .c .cc .cpp .cxx files will be parsed (and the headers included in those)"
-         "If a directory is specified, all the files of that directory will be parsed. More than one file can be specified if separated by semicolons"
-         "(this option could be specified multiple times)")
-        ("include,I", po::value<vector<string> >(&includedirsIn)->composing(),
-         "specify an additional include directory")
-        ("includetree,I", po::value<vector<string> >(&includetreedirs)->composing(),
-         "same as --include, but the subfolders of the specified folder are searched as well (non-recursively, i.e. only the first level of subfolders)")
-        /*("exclude,E", po::value<vector<string> >(&excludedirs)->composing(),
-            "specify a directory which files will be not included in the precompiled header (nor its subfolders, recursively)")*/
-        ("excludeheader", po::value<vector<string> >(&excludeheaders)->composing(),
-         "specify a header file that will not be included in the precompiled header, nor it will be processed. This option is case insensitive.")
-        ("includeheader", po::value<vector<string> >(&includeheaders)->composing(),
-         "specify a user header that will be included in the precompiled header, even if it was in a system or thirdparty include path")
-        ("sysinclude,S", po::value<vector<string> >(&sysincludedirs)->composing(),
-         "specify an additional system or thirdparty include directory")
-        ("sysincludetree,S", po::value<vector<string> >(&sysincludetreedirs)->composing(),
-         "same as --sysinclude, but the subfolders of the specified folder are searched as well (non-recursively, i.e. only the first level of subfolders). Useful with some frameworks like Qt")
+	desc_options.add_options()
+		("input", po::value<vector<string> >(&inputs)->composing(),
+		 "Files/directory to parse in search of standard/thirdparty includes. In case of directories only .c .cc .cpp .cxx files will be parsed (and the headers included in those)"
+		 "If a directory is specified, all the files of that directory will be parsed. More than one file can be specified if separated by semicolons"
+		 "(this option could be specified multiple times)")
+		("include,I", po::value<vector<string> >(&includedirsIn)->composing(),
+		 "specify an additional include directory")
+		("includetree,I", po::value<vector<string> >(&includetreedirs)->composing(),
+		 "same as --include, but the subfolders of the specified folder are searched as well (non-recursively, i.e. only the first level of subfolders)")
+		/*("exclude,E", po::value<vector<string> >(&excludedirs)->composing(),
+			"specify a directory which files will be not included in the precompiled header (nor its subfolders, recursively)")*/
+		("excludeheader", po::value<vector<string> >(&excludeheaders)->composing(),
+		 "specify a header file that will not be included in the precompiled header, nor it will be processed. This option is case insensitive.")
+		("includeheader", po::value<vector<string> >(&includeheaders)->composing(),
+		 "specify a user header that will be included in the precompiled header, even if it was in a system or thirdparty include path")
+		("sysinclude,S", po::value<vector<string> >(&sysincludedirs)->composing(),
+		 "specify an additional system or thirdparty include directory")
+		("sysincludetree,S", po::value<vector<string> >(&sysincludetreedirs)->composing(),
+		 "same as --sysinclude, but the subfolders of the specified folder are searched as well (non-recursively, i.e. only the first level of subfolders). Useful with some frameworks like Qt")
 		("nesting,n", po::value<int>(&nesting)->default_value(0),
 		 "specify maximal include nesting depth (normally should be 0)")
 		("def,D", po::value<vector<string>>(&cxxflags)->composing(),
@@ -205,25 +205,25 @@ void readOptions(int argc, char** argv)
 		("verbose", "Verbose output")
 		("help,h", "Produces this help")
 /*#if BOOST_WAVE_SUPPORT_PRAGMA_ONCE != 0
-        ("noguard,G", "disable include guard detection")
+		("noguard,G", "disable include guard detection")
 #endif*/
-        // it may interesting to be able to specify a directory as input from user 
-        // and also to allow an option -r to do it recursively
-    ;
-	
+		// it may interesting to be able to specify a directory as input from user
+		// and also to allow an option -r to do it recursively
+	;
+
 	try {
-        parsed_options parsed = command_line_parser(argc, argv).options(desc_options).run();	    
+		parsed_options parsed = command_line_parser(argc, argv).options(desc_options).run();
 		store(parsed, vm);
 	} catch (std::exception& e) {
 		cerr << "Error parsing command line: " << e.what() << endl;
 		exit(EXIT_FAILURE);
 	}
 
-    notify(vm);  
+	notify(vm);
 
 	if (vm.count("help") > 0) {
 		stringstream help_stream;
-		
+
 		help_stream << "Analyses C / C++ file to generate a precompiled header. The precompiled header will consist of the standard headers that are included in the provided files (or any header included by the files recursively)." << endl;
 		help_stream << desc_options;
 		cout << help_stream.str();
@@ -242,7 +242,7 @@ void readOptions(int argc, char** argv)
 
 void add_macro_definitions(context_type& context, const string& cxx_flags)
 {
-    string definition;
+	string definition;
 
 	if (!cxx_flags.empty()) {
 		for (auto elem : cxx_flags) {
@@ -261,44 +261,44 @@ void add_macro_definitions(context_type& context, const string& cxx_flags)
 
 void add_system_includes(context_type& ctx)
 {
-    for (auto& sysdir : sysincludetreedirs) {
+	for (auto& sysdir : sysincludetreedirs) {
 
 		sysincludedirs.push_back(sysdir);
 
-        if (is_directory(sysdir)) {
-            vector<string> dirs = getAllDirsInDir(sysdir.c_str());
+		if (is_directory(sysdir)) {
+			vector<string> dirs = getAllDirsInDir(sysdir.c_str());
 
-            for (auto& dir : dirs) {
+			for (auto& dir : dirs) {
 
-                sysincludedirs.push_back(dir);
-            }
-        }        		
-    }
+				sysincludedirs.push_back(dir);
+			}
+		}
+	}
 
-    for (auto dir : sysincludedirs)  {
-        ctx.add_sysinclude_path(dir.c_str());
-    }
+	for (auto dir : sysincludedirs)  {
+		ctx.add_sysinclude_path(dir.c_str());
+	}
 }
 
 void add_user_includes(context_type& ctx)
 {
-    for (auto& userdir : includetreedirs) {
+	for (auto& userdir : includetreedirs) {
 
 		includedirs.insert(boost::filesystem::canonical(userdir));
 
-        if (is_directory(userdir)) {
-            vector<string> dirs = getAllDirsInDir(userdir.c_str());
+		if (is_directory(userdir)) {
+			vector<string> dirs = getAllDirsInDir(userdir.c_str());
 
-            for (auto& dir : dirs) {
+			for (auto& dir : dirs) {
 
-                includedirs.insert(boost::filesystem::canonical(dir));
-            }
-        }
-    }
+				includedirs.insert(boost::filesystem::canonical(dir));
+			}
+		}
+	}
 
-     for (auto dir : includedirs)  {
-        ctx.add_include_path(dir.string().c_str());
-    }
+	 for (auto dir : includedirs)  {
+		ctx.add_include_path(dir.string().c_str());
+	}
 }
 
 void process_file(const path& filename)
@@ -306,36 +306,36 @@ void process_file(const path& filename)
 //  create the wave::context object and initialize it from the file to
 //  preprocess (may contain options inside of special comments)
 
-    std::ifstream instream(filename.string().c_str());
-    string instr;
-    context_type::iterator_type it;
-    context_type::iterator_type end;
-    bool is_end = false;
+	std::ifstream instream(filename.string().c_str());
+	string instr;
+	context_type::iterator_type it;
+	context_type::iterator_type end;
+	bool is_end = false;
 	string cxxflagsstr;
 
-    instream.unsetf(std::ios::skipws);
-    instr = std::string(std::istreambuf_iterator<char>(instream.rdbuf()),
-        std::istreambuf_iterator<char>());    
+	instream.unsetf(std::ios::skipws);
+	instr = std::string(std::istreambuf_iterator<char>(instream.rdbuf()),
+		std::istreambuf_iterator<char>());
 
-	if (vm.count("verbose") > 0) 
+	if (vm.count("verbose") > 0)
 		std::cerr << "Preprocessing input file: " << filename.generic_string()
-			      << "..." << std::endl;
+				  << "..." << std::endl;
 
-    context_type ctx(instr.begin(), instr.end(), filename.string().c_str(),
-                     print_opened_include_files <token_type>());
-       
-    //  add special predefined macros
+	context_type ctx(instr.begin(), instr.end(), filename.string().c_str(),
+					 print_opened_include_files <token_type>());
 
-    // TODO GerardoHernandez configure this in the command line
+	//  add special predefined macros
+
+	// TODO GerardoHernandez configure this in the command line
 	ctx.set_language(language_support(support_cpp11 |
-		                              support_option_variadics |
+									  support_option_variadics |
 									  support_option_long_long |
-									  support_option_include_guard_detection 
+									  support_option_include_guard_detection
 									 ));
 	// it is best not to go too deep, headers like <iostream> on windows
 	// give problem with boost wave
-    ctx.set_max_include_nesting_depth(nesting); 
-	
+	ctx.set_max_include_nesting_depth(nesting);
+
 	for (auto& def : cxxflags) {
 		if (cxxflagsstr.empty())
 			cxxflagsstr += def;
@@ -343,41 +343,41 @@ void process_file(const path& filename)
 			cxxflagsstr += ";" + def;
 	}
 
-    add_macro_definitions(ctx, cxxflagsstr);
-    add_system_includes(ctx);
-    add_user_includes(ctx);
+	add_macro_definitions(ctx, cxxflagsstr);
+	add_system_includes(ctx);
+	add_user_includes(ctx);
 
-    //  preprocess the input, loop over all generated tokens collecting the
-    //  generated text
-    it = ctx.begin();
-    end = ctx.end();
-           
-    // perform actual preprocessing
-    do  
-    {
-        using namespace boost::wave;
-           
-        try {
-            ++it;
-            // operator != could also throw an exception
-            is_end = it != end;
-        } catch (boost::wave::cpplexer::lexing_exception const& e) {
-                    
-            std::string filename = e.file_name();
-            cerr
-                << filename << "(" << e.line_no() << "): "
-                << "Lexical error: " << e.description() << std::endl;      
+	//  preprocess the input, loop over all generated tokens collecting the
+	//  generated text
+	it = ctx.begin();
+	end = ctx.end();
+
+	// perform actual preprocessing
+	do
+	{
+		using namespace boost::wave;
+
+		try {
+			++it;
+			// operator != could also throw an exception
+			is_end = it != end;
+		} catch (boost::wave::cpplexer::lexing_exception const& e) {
+
+			std::string filename = e.file_name();
+			cerr
+				<< filename << "(" << e.line_no() << "): "
+				<< "Lexical error: " << e.description() << std::endl;
 			break;
-        }
-        catch (boost::wave::cpp_exception const& e) {
+		}
+		catch (boost::wave::cpp_exception const& e) {
 			if (e.get_errorcode() != preprocess_exception::include_nesting_too_deep) {
 				std::string filename = e.file_name();
 				cerr
 					<< filename << "(" << e.line_no() << "): "
 					<< e.description() << std::endl;
 			}
-        }            
-    } while (!is_end);                            
+		}
+	} while (!is_end);
 }
 
 void write_stdafx()
@@ -385,21 +385,21 @@ void write_stdafx()
 	path outputpath(outputfile);
 	string guardname = outputpath.filename().string();
 	size_t dotpos = guardname.find_first_of(".");
-	
+
 	guardname = guardname.substr(0, dotpos);
 
 	for (auto & c : guardname)
 		c = toupper(c);
-		
-	if (vm.count("pragma") > 0) 
-        cout << "#pragma once\n\n";    
+
+	if (vm.count("pragma") > 0)
+		cout << "#pragma once\n\n";
 	else {
 		cout << "#ifndef " + guardname + "_H\n";
 		cout << "#define " + guardname + "_H\n";
-	}    
+	}
 
-    for (auto header : systemheaders) {
-        string headername = header.filename().string();
+	for (auto header : systemheaders) {
+		string headername = header.filename().string();
 		auto header_it = headersfound.begin();
 
 		while (header_it != headersfound.end()) {
@@ -409,16 +409,16 @@ void write_stdafx()
 				break;
 			}
 			header_it++;
-		}        
-    }
+		}
+	}
 
-	if (vm.count("pragma") == 0) 
-        cout << "#endif\n";
+	if (vm.count("pragma") == 0)
+		cout << "#endif\n";
 }
 
 void splitInput(vector<string>& files, const string& filesstr)
 {
-    string file;
+	string file;
 
 	if (!filesstr.empty()) {
 		for (auto elem : filesstr) {
@@ -435,11 +435,11 @@ void splitInput(vector<string>& files, const string& filesstr)
 }
 
 int main(int argc, char** argv)
-{       
-	ofstream out;		
+{
+	ofstream out;
 
-    readOptions(argc, argv);
-	
+	readOptions(argc, argv);
+
 	if (vm.count("verbose") > 0) {
 		cout << "Arguments: " << endl;
 		for (int arg = 0; arg < argc; arg++) {
@@ -452,16 +452,16 @@ int main(int argc, char** argv)
 
 	if (!out.is_open()) {
 		cerr << "Cannot open: " << outputfile;
-	    exit(EXIT_FAILURE);
-    }
+		exit(EXIT_FAILURE);
+	}
 
 	cout.rdbuf(out.rdbuf());
 
-    for (auto& input : inputs) {
-        vector<string> inputList;
-        splitInput(inputList, input);
+	for (auto& input : inputs) {
+		vector<string> inputList;
+		splitInput(inputList, input);
 
-        for (auto& input_path : inputList) {
+		for (auto& input_path : inputList) {
 
 			if (is_directory(input_path)) {
 				vector<string> files = getAllFilesInDir(input_path.c_str());
@@ -475,21 +475,21 @@ int main(int argc, char** argv)
 				exit(EXIT_FAILURE);
 			}
 			else
-                userheadersqueue.push(boost::filesystem::canonical(input));
-        }
-    }
+				userheadersqueue.push(boost::filesystem::canonical(input));
+		}
+	}
 
 	cerr << "Processing " << userheadersqueue.size() << " reported includes" << std::endl;
-    while (!userheadersqueue.empty()) {
-        path header = userheadersqueue.front();
-        if (headersprocessed.count(header) == 0) {
+	while (!userheadersqueue.empty()) {
+		path header = userheadersqueue.front();
+		if (headersprocessed.count(header) == 0) {
 			process_file(header);
 			headersprocessed.insert(header);
-        }
+		}
 
-        userheadersqueue.pop();
-    }
-    write_stdafx();
+		userheadersqueue.pop();
+	}
+	write_stdafx();
 
-    return EXIT_SUCCESS;
+	return EXIT_SUCCESS;
 }
