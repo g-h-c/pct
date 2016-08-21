@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>MainWindow</class>
- <widget class="QMainWindow" name="MainWindow">
+ <class>ExtractHeadersWindow</class>
+ <widget class="QMainWindow" name="ExtractHeadersWindow">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -17,9 +17,15 @@
    </sizepolicy>
   </property>
   <property name="windowTitle">
-   <string>MainWindow</string>
+   <string>extractheaders</string>
   </property>
   <widget class="QWidget" name="centralWidget">
+   <property name="sizePolicy">
+    <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+     <horstretch>0</horstretch>
+     <verstretch>0</verstretch>
+    </sizepolicy>
+   </property>
    <property name="maximumSize">
     <size>
      <width>1223</width>
@@ -27,49 +33,74 @@
     </size>
    </property>
    <layout class="QGridLayout" name="gridLayout">
-    <item row="0" column="0">
-     <widget class="QFrame" name="frame">
-      <property name="frameShape">
-       <enum>QFrame::StyledPanel</enum>
-      </property>
-      <property name="frameShadow">
-       <enum>QFrame::Raised</enum>
-      </property>
-     </widget>
-    </item>
-    <item row="1" column="1">
+    <property name="sizeConstraint">
+     <enum>QLayout::SetMaximumSize</enum>
+    </property>
+    <item row="0" column="0" rowspan="2">
      <widget class="QGroupBox" name="solutionGroupBox">
       <property name="title">
        <string>Solution</string>
       </property>
-      <widget class="QTreeWidget" name="solutionTree">
-       <property name="geometry">
-        <rect>
-         <x>0</x>
-         <y>0</y>
-         <width>331</width>
-         <height>192</height>
-        </rect>
-       </property>
-       <column>
-        <property name="text">
-         <string notr="true">1</string>
-        </property>
-       </column>
-      </widget>
+      <layout class="QHBoxLayout" name="horizontalLayout_2">
+       <item>
+        <widget class="QTreeWidget" name="solutionTree">
+         <column>
+          <property name="text">
+           <string notr="true">1</string>
+          </property>
+         </column>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </item>
+    <item row="1" column="2">
+     <widget class="QGroupBox" name="errorsGroupBox">
+      <property name="title">
+       <string>Errors</string>
+      </property>
+      <layout class="QHBoxLayout" name="horizontalLayout_5">
+       <item>
+        <widget class="QListView" name="errorsList"/>
+       </item>
+      </layout>
+     </widget>
+    </item>
+    <item row="0" column="1">
+     <widget class="QGroupBox" name="IncludepathsGroupBox">
+      <property name="title">
+       <string>Include paths</string>
+      </property>
+      <layout class="QHBoxLayout" name="horizontalLayout">
+       <item>
+        <widget class="QListWidget" name="includesList"/>
+       </item>
+      </layout>
+     </widget>
+    </item>
+    <item row="1" column="1">
+     <widget class="QGroupBox" name="definesGroupBox">
+      <property name="title">
+       <string>Macro definitions</string>
+      </property>
+      <layout class="QHBoxLayout" name="horizontalLayout_3">
+       <item>
+        <widget class="QListWidget" name="definesList"/>
+       </item>
+      </layout>
      </widget>
     </item>
     <item row="0" column="2">
-     <widget class="QListWidget" name="includesList"/>
-    </item>
-    <item row="1" column="3">
-     <widget class="QListView" name="errorsList"/>
-    </item>
-    <item row="1" column="2">
-     <widget class="QListWidget" name="definesList"/>
-    </item>
-    <item row="0" column="3">
-     <widget class="QListWidget" name="outputList"/>
+     <widget class="QGroupBox" name="outputGroupBox">
+      <property name="title">
+       <string>Output</string>
+      </property>
+      <layout class="QHBoxLayout" name="horizontalLayout_4">
+       <item>
+        <widget class="QListWidget" name="outputList"/>
+       </item>
+      </layout>
+     </widget>
     </item>
    </layout>
   </widget>

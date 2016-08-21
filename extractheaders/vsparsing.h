@@ -14,10 +14,12 @@ struct ProjectConfiguration {
 class VsParsing {
 public:
 
+	// @path path to a .vcxproj
 	// @throw std::runtime_error If the file could not be opened
 	VsParsing(const char* path);
 	void parse(std::vector<ProjectConfiguration>& configurations,
 			std::vector<std::string>& files);
+	// TODO g-h-c parse solution files as well
 private:
 
 	tinyxml2::XMLDocument doc;

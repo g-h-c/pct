@@ -4,7 +4,11 @@ TEMPLATE = subdirs
 
   extracheaderscmd.subdir=extractheaderscmd
   extractheaderscmd.target=extractheaderscmd
+  
+  extracheadersgui.subdir=extractheadersgui
+  extractheadersgui.target=extractheadersgui
 
-
-  SUBDIRS += extractheaders extractheaderscmd
+  SUBDIRS += extractheaders extractheadersgui extractheaderscmd
+  
+  
   
