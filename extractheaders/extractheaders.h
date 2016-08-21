@@ -24,8 +24,8 @@ struct ExtractHeadersInput {
 
 struct ExtractHeadersOutput {
 	ExtractHeadersOutput(std::ostream& errStream,
-		                 std::ostream& infStream,
-						 std::ostream& outStream) :
+						std::ostream& infStream,
+						std::ostream& outStream) :
 		errorStream(errStream),
 		infoStream(infStream),
 		outputStream(outStream)

@@ -17,7 +17,7 @@ public:
 	// @throw std::runtime_error If the file could not be opened
 	VsParsing(const char* path);
 	void parse(std::vector<ProjectConfiguration>& configurations,
-		       std::vector<std::string>& files);
+			std::vector<std::string>& files);
 private:
 
 	tinyxml2::XMLDocument doc;

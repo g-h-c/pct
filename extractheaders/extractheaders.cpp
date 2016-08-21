@@ -107,72 +107,72 @@ ExtractHeaders::~ExtractHeaders()
 
 bool iscplusplusfile(path filepath)
 {
-    const char* extensions[] =
-    { ".cpp",
-    ".cxx",
-    ".c",
-    ".cc",
-    NULL
-    };
-    const string file_ext = filepath.extension().string();
-    unsigned int pos = 0;
+	const char* extensions[] =
+	{ ".cpp",
+	".cxx",
+	".c",
+	".cc",
+	NULL
+	};
+	const string file_ext = filepath.extension().string();
+	unsigned int pos = 0;
 
-    while (extensions[pos]) {
-        if (file_ext == extensions[pos])
-            return true;
+	while (extensions[pos]) {
+	if (file_ext == extensions[pos])
+	return true;
 
-        pos++;
-    }
+	pos++;
+	}
 
-    return false;
+	return false;
 }
 
 // gets all files in a dir (non-recursively)
 vector<string> getAllFilesInDir(const char* dir)
 {
-    path path(dir);
-    directory_iterator end_iter;
-    vector<string> result;
+	path path(dir);
+	directory_iterator end_iter;
+	vector<string> result;
 
-    if (exists(path) && is_directory(path))
-    {
-        for (directory_iterator dir_iter(path); dir_iter != end_iter; ++dir_iter)
-        {
-            if (is_regular_file(dir_iter->status()) &&
-                iscplusplusfile(dir_iter->path()))
-                result.push_back(dir_iter->path().string());
-        }
-    }
+	if (exists(path) && is_directory(path))
+	{
+	for (directory_iterator dir_iter(path); dir_iter != end_iter; ++dir_iter)
+	{
+		if (is_regular_file(dir_iter->status()) &&
+				iscplusplusfile(dir_iter->path()))
+				result.push_back(dir_iter->path().string());
+		}
+	}
 
-    return result;
+	return result;
 }
 
 // gets all dirs in a dir (non-recursively)
 vector<string> getAllDirsInDir(const char* dir)
 {
-    path path(dir);
-    directory_iterator end_iter;
-    vector<string> result;
+	path path(dir);
+	directory_iterator end_iter;
+	vector<string> result;
 
-    if (exists(path) && is_directory(path))
-    {
-        for (directory_iterator dir_iter(path); dir_iter != end_iter; ++dir_iter)
-        {
-            if (is_directory(dir_iter->status()))
-                result.push_back(dir_iter->path().string());
-        }
-    }
+	if (exists(path) && is_directory(path))
+	{
+		for (directory_iterator dir_iter(path); dir_iter != end_iter; ++dir_iter)
+		{
+			if (is_directory(dir_iter->status()))
+				result.push_back(dir_iter->path().string());
+		}
+	}
 
-    return result;
+	return result;
 }
 
 
 bool subpath(const vector<string> paths, const string& path)
 {
-    return false;
-    /*// TODO GerardoHernandez
-    assert(false);
-    return false;*/
+	return false;
+	/*// TODO GerardoHernandez
+	assert(false);
+	return false;*/
 }
 
 
@@ -232,19 +232,19 @@ void ExtractHeadersImpl::add_macro_definitions(context_type& context, const stri
 
 void ExtractHeadersImpl::add_system_includes(context_type& ctx)
 {
-    for (auto& sysdir : input.sysincludetreedirs) {
+	for (auto& sysdir : input.sysincludetreedirs) {
 
 		sysincludedirs.push_back(sysdir);
 
-        if (is_directory(sysdir)) {
-            vector<string> dirs = getAllDirsInDir(sysdir.c_str());
+		if (is_directory(sysdir)) {
+			vector<string> dirs = getAllDirsInDir(sysdir.c_str());
 
-            for (auto& dir : dirs) {
+			for (auto& dir : dirs) {
 
-                sysincludedirs.push_back(dir);
-            }
-        }        		
-    }
+				sysincludedirs.push_back(dir);
+			}
+		}
+	}
 
 	for (auto dir : sysincludedirs)  {
         ctx.add_sysinclude_path(dir.c_str());
@@ -257,19 +257,19 @@ void ExtractHeadersImpl::add_user_includes(context_type& ctx)
 
 		includedirs.insert(boost::filesystem::canonical(userdir));
 
-        if (is_directory(userdir)) {
-            vector<string> dirs = getAllDirsInDir(userdir.c_str());
+		if (is_directory(userdir)) {
+			vector<string> dirs = getAllDirsInDir(userdir.c_str());
 
-            for (auto& dir : dirs) {
+			for (auto& dir : dirs) {
 
-                includedirs.insert(boost::filesystem::canonical(dir));
-            }
-        }
-    }
+				includedirs.insert(boost::filesystem::canonical(dir));
+		}
+		}
+	}
 
 	for (auto dir : includedirs)  {
-        ctx.add_include_path(dir.string().c_str());
-    }
+		ctx.add_include_path(dir.string().c_str());
+	}
 }
 
 void ExtractHeadersImpl::process_file(const path& filename)
@@ -277,18 +277,18 @@ void ExtractHeadersImpl::process_file(const path& filename)
 //  create the wave::context object and initialize it from the file to
 //  preprocess (may contain options inside of special comments)
 
-    std::ifstream instream(filename.string().c_str());
-    string instr;
-    context_type::iterator_type it;
-    context_type::iterator_type end;
-    bool is_end = false;
+	std::ifstream instream(filename.string().c_str());
+	string instr;
+	context_type::iterator_type it;
+	context_type::iterator_type end;
+	bool is_end = false;
 	string cxxflagsstr;
 	find_includes_hooks <token_type> hooks;
 
 	hooks.impl = this;
-    instream.unsetf(std::ios::skipws);
-    instr = std::string(std::istreambuf_iterator<char>(instream.rdbuf()),
-        std::istreambuf_iterator<char>());    
+	instream.unsetf(std::ios::skipws);
+	instr = std::string(std::istreambuf_iterator<char>(instream.rdbuf()),
+		std::istreambuf_iterator<char>());    
 
 	if (input.verbose) 
 		output.infoStream << "Preprocessing input file: " << filename.generic_string()
@@ -297,11 +297,11 @@ void ExtractHeadersImpl::process_file(const path& filename)
     context_type ctx(instr.begin(),
 		             instr.end(),
 					 filename.string().c_str(),
-                     hooks);
-       
-    //  add special predefined macros
+					hooks);
 
-    // TODO GerardoHernandez configure this in the command line
+	//  add special predefined macros
+
+	// TODO GerardoHernandez configure this in the command line
 	ctx.set_language(language_support(support_cpp11 |
 		                              support_option_variadics |
 									  support_option_long_long |
@@ -322,37 +322,36 @@ void ExtractHeadersImpl::process_file(const path& filename)
     add_system_includes(ctx);
     add_user_includes(ctx);
 
-    //  preprocess the input, loop over all generated tokens collecting the
-    //  generated text
-    it = ctx.begin();
-    end = ctx.end();
-           
-    // perform actual preprocessing
-    do  
-    {
-        using namespace boost::wave;
-           
-        try {
-            ++it;
-            // operator != could also throw an exception
-            is_end = it != end;
-        } catch (boost::wave::cpplexer::lexing_exception const& e) {
-                    
-            std::string filename = e.file_name();
+	//  preprocess the input, loop over all generated tokens collecting the
+	//  generated text
+	it = ctx.begin();
+	end = ctx.end();
+
+	// perform actual preprocessing
+	do  
+	{
+	using namespace boost::wave;
+
+	try {
+		++it;
+		// operator != could also throw an exception
+		is_end = it != end;
+	} catch (boost::wave::cpplexer::lexing_exception const& e) {
+
+			std::string filename = e.file_name();
 			output.errorStream
-                << filename << "(" << e.line_no() << "): "
-                << "Lexical error: " << e.description() << std::endl;      
+					<< filename << "(" << e.line_no() << "): "
+					<< "Lexical error: " << e.description() << std::endl;      
 			break;
-        }
-        catch (boost::wave::cpp_exception const& e) {
+	} catch (boost::wave::cpp_exception const& e) {
 			if (e.get_errorcode() != preprocess_exception::include_nesting_too_deep) {
 				std::string filename = e.file_name();
 				output.errorStream
 					<< filename << "(" << e.line_no() << "): "
 					<< e.description() << std::endl;
 			}
-        }            
-    } while (!is_end);                            
+	}
+	} while (!is_end);
 }
 
 void ExtractHeadersImpl::write_stdafx()
@@ -367,14 +366,14 @@ void ExtractHeadersImpl::write_stdafx()
 		c = toupper(c);
 		
 	if (input.pragma) 
-        output.outputStream << "#pragma once\n\n";    
+	output.outputStream << "#pragma once\n\n";    
 	else {
 		output.outputStream << "#ifndef " + guardname + "_H\n";
 		output.outputStream << "#define " + guardname + "_H\n";
-	}    
+	}
 
-    for (auto header : systemheaders) {
-        string headername = header.filename().string();
+	for (auto header : systemheaders) {
+		string headername = header.filename().string();
 		auto header_it = output.headersfound.begin();
 
 		while (header_it != output.headersfound.end()) {
@@ -384,8 +383,8 @@ void ExtractHeadersImpl::write_stdafx()
 				break;
 			}
 			header_it++;
-		}        
-    }
+		}
+	}
 
 	if (!input.pragma) 
 		output.outputStream << "#endif\n";
@@ -393,7 +392,7 @@ void ExtractHeadersImpl::write_stdafx()
 
 void splitInput(vector<string>& files, const string& filesstr)
 {
-    string file;
+	string file;
 
 	if (!filesstr.empty()) {
 		for (auto elem : filesstr) {
