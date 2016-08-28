@@ -11,19 +11,36 @@ struct ProjectConfiguration {
 	std::string additionalIncludeDirectories;
 };
 
-class VsParsing {
+struct Project {
+	std::string name;
+	std::string location;
+};
+
+class VcxprojParsing {
 public:
 
 	// @path path to a .vcxproj
 	// @throw std::runtime_error If the file could not be opened
-	VsParsing(const char* path);
+	VcxprojParsing(const char* path);
 	void parse(std::vector<ProjectConfiguration>& configurations,
-			std::vector<std::string>& files);
-	// TODO g-h-c parse solution files as well
+						std::vector<std::string>& files);	
+
 private:
 
 	tinyxml2::XMLDocument doc;
 
+};
+
+class SlnParsing {
+public:
+
+	// @path path to a .vcxproj
+	// @throw std::runtime_error If the file could not be opened
+	SlnParsing(const char* path);
+	void parse(std::vector<Project>& projects);
+
+private:
+	std::vector<std::string> fileContents;
 };
 
 #endif
