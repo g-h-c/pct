@@ -15,6 +15,7 @@ INCLUDEPATH += $(BOOST_HOME)
 CONFIG(debug, debug|release): CONF_FOLDER=debug
 CONFIG(release, debug|release): CONF_FOLDER=release
 LIBS += -L$(BOOST_HOME)/stage/lib
-LIBS += -L../extractheaders/$$CONF_FOLDER -lextractheaders
+LIBS += -L../extractheaders/$$CONF_FOLDER -lextractheaderslib
+        
 
 
