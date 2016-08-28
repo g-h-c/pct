@@ -35,7 +35,11 @@ void readOptions(ExtractHeadersInput& input, int argc, char** argv)
 		("nesting,n", po::value<int>(&input.nesting)->default_value(0),
 		"specify maximal include nesting depth (normally should be 0)")
 		("def,D", po::value<vector<string>>(&input.cxxflags)->composing(),
-		"macros to be definited. Separated by semicolon E.g. --def _M_X64;_WIN32;WIN32")
+		"macros to be defined. Separated by semicolon E.g. --def _M_X64;_WIN32;WIN32")
+		("vcxproj", po::value<string>(&input.vcxproj),
+		"")
+		("configuration", po::value<string>(&input.configuration),
+		"When --vcxproj is defined, the configuration to read macro definitions from. e.g. Debug|x64")
 		("pragma", "If specified, #pragma once will be added to the output, instead of the include guards")
 		("output,o", po::value<string>(&input.outputfile)->default_value("stdafx.h"),
 		"output file")

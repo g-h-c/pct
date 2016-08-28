@@ -14,8 +14,11 @@ struct ExtractHeadersInput {
 	std::vector<std::string> sysincludedirs;
 	std::vector<std::string> sysincludetreedirs;
 	std::vector<std::string> cxxflags;
+	std::string vcxproj;
+	std::string configuration;
 	// TODO g-h-c
 	std::vector<std::string> excludedirs;
+	
 	int nesting;
 	std::string outputfile;
 	bool verbose;

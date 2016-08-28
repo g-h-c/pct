@@ -1,4 +1,4 @@
-TARGET = extractheaderscmd
+TARGET = extractheaders
 TEMPLATE = app
 CONFIG+=console
 SOURCES += extractheaderscmd.cpp

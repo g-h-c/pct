@@ -1,16 +1,12 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "extractheaders", "C:/projects/pct/extractheaders\extractheaders.vcxproj", "{01131F83-4E52-3021-A5CC-8D514AFC3EDB}"
+VisualStudioVersion = 12.0.40629.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "extractheaderslib", "extractheaders\extractheaderslib.vcxproj", "{CF1E84FC-48FB-3D48-8B4B-AF74F64C2F96}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "extractheadersgui", "C:/projects/pct/extractheadersgui\extractheadersgui.vcxproj", "{6CC5CF74-39E2-3A6F-A3EA-DF688F9D7C9F}"
-	ProjectSection(ProjectDependencies) = postProject
-		{01131F83-4E52-3021-A5CC-8D514AFC3EDB} = {01131F83-4E52-3021-A5CC-8D514AFC3EDB}
-	EndProjectSection
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "extractheadersgui", "extractheadersgui\extractheadersgui.vcxproj", "{6CC5CF74-39E2-3A6F-A3EA-DF688F9D7C9F}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "extractheaderscmd", "C:/projects/pct/extractheaderscmd\extractheaderscmd.vcxproj", "{EB1A090E-1EC4-3E01-94CE-FE39AEFD012B}"
-	ProjectSection(ProjectDependencies) = postProject
-		{01131F83-4E52-3021-A5CC-8D514AFC3EDB} = {01131F83-4E52-3021-A5CC-8D514AFC3EDB}
-	EndProjectSection
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "extractheaders", "extractheaderscmd\extractheaders.vcxproj", "{CF72E5A8-AE38-3B6A-A553-55FC7FBECCA9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -18,21 +14,20 @@ Global
 		Release|x64 = Release|x64
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{01131F83-4E52-3021-A5CC-8D514AFC3EDB}.Debug|x64.ActiveCfg = Debug|x64
-		{01131F83-4E52-3021-A5CC-8D514AFC3EDB}.Debug|x64.Build.0 = Debug|x64
-		{01131F83-4E52-3021-A5CC-8D514AFC3EDB}.Release|x64.ActiveCfg = Release|x64
-		{01131F83-4E52-3021-A5CC-8D514AFC3EDB}.Release|x64.Build.0 = Release|x64
+		{CF1E84FC-48FB-3D48-8B4B-AF74F64C2F96}.Debug|x64.ActiveCfg = Debug|x64
+		{CF1E84FC-48FB-3D48-8B4B-AF74F64C2F96}.Debug|x64.Build.0 = Debug|x64
+		{CF1E84FC-48FB-3D48-8B4B-AF74F64C2F96}.Release|x64.ActiveCfg = Release|x64
+		{CF1E84FC-48FB-3D48-8B4B-AF74F64C2F96}.Release|x64.Build.0 = Release|x64
 		{6CC5CF74-39E2-3A6F-A3EA-DF688F9D7C9F}.Debug|x64.ActiveCfg = Debug|x64
 		{6CC5CF74-39E2-3A6F-A3EA-DF688F9D7C9F}.Debug|x64.Build.0 = Debug|x64
 		{6CC5CF74-39E2-3A6F-A3EA-DF688F9D7C9F}.Release|x64.ActiveCfg = Release|x64
 		{6CC5CF74-39E2-3A6F-A3EA-DF688F9D7C9F}.Release|x64.Build.0 = Release|x64
-		{EB1A090E-1EC4-3E01-94CE-FE39AEFD012B}.Debug|x64.ActiveCfg = Debug|x64
-		{EB1A090E-1EC4-3E01-94CE-FE39AEFD012B}.Debug|x64.Build.0 = Debug|x64
-		{EB1A090E-1EC4-3E01-94CE-FE39AEFD012B}.Release|x64.ActiveCfg = Release|x64
-		{EB1A090E-1EC4-3E01-94CE-FE39AEFD012B}.Release|x64.Build.0 = Release|x64
+		{CF72E5A8-AE38-3B6A-A553-55FC7FBECCA9}.Debug|x64.ActiveCfg = Debug|x64
+		{CF72E5A8-AE38-3B6A-A553-55FC7FBECCA9}.Debug|x64.Build.0 = Debug|x64
+		{CF72E5A8-AE38-3B6A-A553-55FC7FBECCA9}.Release|x64.ActiveCfg = Release|x64
+		{CF72E5A8-AE38-3B6A-A553-55FC7FBECCA9}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
-	GlobalSection(ExtensibilityGlobals) = postSolution
-	EndGlobalSection
-	GlobalSection(ExtensibilityAddIns) = postSolution
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
 	EndGlobalSection
 EndGlobal

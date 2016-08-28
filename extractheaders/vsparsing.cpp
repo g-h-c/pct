@@ -3,11 +3,12 @@
 #include <vector>
 #include <string>
 #include <regex>
+#include <fstream>
 
 using namespace tinyxml2;
 using namespace std;
 
-VsParsing::VsParsing(const char* path)
+VcxprojParsing::VcxprojParsing(const char* path)
 {				
 	if (doc.LoadFile(path) != XMLError::XML_SUCCESS)
 		throw runtime_error(string("Cannot open: ") + path + ": " + doc.ErrorName());
@@ -15,7 +16,7 @@ VsParsing::VsParsing(const char* path)
 
 }
 
-void VsParsing::parse(vector<ProjectConfiguration>& configurations,
+void VcxprojParsing::parse(vector<ProjectConfiguration>& configurations,
 	                  vector<string>& files)
 {
 	XMLElement* project = project = doc.FirstChildElement("Project");;
@@ -74,4 +75,35 @@ void VsParsing::parse(vector<ProjectConfiguration>& configurations,
 
 
 }
+
+SlnParsing::SlnParsing(const char* path)
+{
+	ifstream file(path);
+	string line;
+
+	while (getline(file, line)) {
+		if (!line.empty())
+			fileContents.push_back(line);
+	}
+}
+
+void SlnParsing::parse(std::vector<Project>& projects)
+{	
+		for (auto& line : fileContents) {
+			std::regex rgx(R"%(Project\("\{.?.?.?.?.?.?.?.?-.?.?.?.?-.?.?.?.?-.?.?.?.?-.?.?.?.?.?.?.?.?.?.?.?.?\}"\)\s*=\s*"(.*)"\s*,\s*"(.*)"\s*,\s*"\{.?.?.?.?.?.?.?.?-.?.?.?.?-.?.?.?.?-.?.?.?.?-.?.?.?.?.?.?.?.?.?.?.?.?\}\s*")%");
+			std::smatch match;
+
+			regex_search(line, match, rgx);
+
+			if (!match.empty() && match.length() >= 2) {
+				Project project;
+
+				project.name = match[1];
+				project.location = match[2];
+				projects.push_back(project);
+			}
+		}
+}
+
+
 

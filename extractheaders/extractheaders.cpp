@@ -1,9 +1,7 @@
 #include "extractheaders.h"
 
-
+#include "vsparsing.h"
 #include <boost/wave/language_support.hpp>
-
-
 #include <boost/filesystem/operations.hpp>
 #include <boost/wave.hpp>
 #include <boost/wave/cpplexer/cpp_lex_token.hpp>
@@ -15,7 +13,7 @@
 #include <stdexcept>
 #include <sstream>
 #include <functional>
-
+#include <direct.h>
 using namespace std;
 using namespace boost;
 using namespace wave;
@@ -88,15 +86,18 @@ public:
 	void add_user_includes(context_type& ctx);
 	void write_stdafx();
 	void run();
-
-	std::queue<path> userheadersqueue;
-	std::set<path> headersprocessed;
-	std::set<path> includedirs;
-	std::vector<string> sysincludedirs;
+	
+	queue<path> userheadersqueue;
+	set<path> headersprocessed;
+	set<path> includedirs;
+	vector<string> sysincludedirs;
 	// system or thirdparty headers
-	std::set<boost::filesystem::path> systemheaders;	
+	set<boost::filesystem::path> systemheaders;	
 
-	const ExtractHeadersInput& input;
+	const ExtractHeadersInput& originalInput;
+	// same as originalInput but some parameters may contain more information E.g.
+	// input.inputs may get some elements from the .vcxproj
+	ExtractHeadersInput input;
 	ExtractHeadersOutput& output;
 };
 
@@ -182,20 +183,10 @@ ExtractHeaders::ExtractHeaders()
 }
 
 ExtractHeadersImpl::ExtractHeadersImpl(ExtractHeadersOutput& out, const ExtractHeadersInput& in) :
+    originalInput(in),
 	input(in),
 	output(out)
 {
-	
-	for (const auto& includeDir : input.includedirsIn)
-	{
-		includedirs.insert(boost::filesystem::canonical(includeDir));
-	}
-
-	for (const auto& includeDir : input.sysincludedirs)
-	{
-		sysincludedirs.push_back(includeDir);
-	}
-
 	
 }
 
@@ -208,7 +199,11 @@ void ExtractHeaders::write_stdafx()
 void ExtractHeaders::run(ExtractHeadersOutput& output, const ExtractHeadersInput& input)
 {
 	impl.reset(new ExtractHeadersImpl(output, input));
-	impl->run();
+	try {
+		impl->run();
+	} catch (std::exception& e) {
+		output.errorStream << e.what() << endl;
+	}
 }
 
 void ExtractHeadersImpl::add_macro_definitions(context_type& context, const string& cxx_flags)
@@ -232,6 +227,7 @@ void ExtractHeadersImpl::add_macro_definitions(context_type& context, const stri
 
 void ExtractHeadersImpl::add_system_includes(context_type& ctx)
 {
+	
 	for (auto& sysdir : input.sysincludetreedirs) {
 
 		sysincludedirs.push_back(sysdir);
@@ -246,8 +242,8 @@ void ExtractHeadersImpl::add_system_includes(context_type& ctx)
 		}
 	}
 
-	for (auto dir : sysincludedirs)  {
-        ctx.add_sysinclude_path(dir.c_str());
+	for (auto dir : sysincludedirs)  {		
+		ctx.add_sysinclude_path(dir.c_str());
     }
 }
 
@@ -268,7 +264,7 @@ void ExtractHeadersImpl::add_user_includes(context_type& ctx)
 	}
 
 	for (auto dir : includedirs)  {
-		ctx.add_include_path(dir.string().c_str());
+		ctx.add_include_path(dir.string().c_str());		
 	}
 }
 
@@ -311,7 +307,11 @@ void ExtractHeadersImpl::process_file(const path& filename)
 	// give problem with boost wave
 	ctx.set_max_include_nesting_depth(input.nesting);
 	
-	for (auto& def : input.cxxflags) {
+	for (auto def : input.cxxflags) {
+
+		if (def.back() == ';')
+			def.resize(def.size() - 1);
+
 		if (cxxflagsstr.empty())
 			cxxflagsstr += def;
 		else
@@ -319,6 +319,18 @@ void ExtractHeadersImpl::process_file(const path& filename)
 	}
 
     add_macro_definitions(ctx, cxxflagsstr);
+
+	for (const auto& includeDir : input.includedirsIn)
+	{
+		if (boost::filesystem::exists(includeDir))
+			includedirs.insert(boost::filesystem::canonical(includeDir));
+	}
+
+	for (const auto& includeDir : input.sysincludedirs)
+	{
+		sysincludedirs.push_back(includeDir);
+	}
+
     add_system_includes(ctx);
     add_user_includes(ctx);
 
@@ -390,21 +402,22 @@ void ExtractHeadersImpl::write_stdafx()
 		output.outputStream << "#endif\n";
 }
 
-void splitInput(vector<string>& files, const string& filesstr)
+// splits a semicolon-separated list of words and returns a vector
+void splitInput(vector<string>& elems, const string& inputstr)
 {
-	string file;
+	string elem;
 
-	if (!filesstr.empty()) {
-		for (auto elem : filesstr) {
-			if (elem == ';') {
-				files.push_back(file);
-				file.clear();
+	if (!inputstr.empty()) {
+		for (auto character : inputstr) {
+			if (character == ';') {
+				elems.push_back(elem);
+				elem.clear();
 			}
 			else
-				file += elem;
+				elem += character;
 		}
 
-		files.push_back(file);
+		elems.push_back(elem);
 	}
 }
 
@@ -412,6 +425,68 @@ void splitInput(vector<string>& files, const string& filesstr)
 // @throws runtime_error if an input path does no exist
 void ExtractHeadersImpl::run()
 {
+	if (!input.vcxproj.empty()) {
+		try {
+			VcxprojParsing parser(input.vcxproj.c_str());
+			vector<ProjectConfiguration> configurations;
+			vector<ProjectConfiguration>::iterator configuration_it;
+			std::vector<std::string> files;
+			std::string definitions;
+			std::string additionalIncludeDirectories;
+			path vcxproj_dir = path(input.vcxproj).remove_filename();
+			 
+			parser.parse(configurations, files);
+
+			if (configurations.empty())
+				throw runtime_error("File: " + input.vcxproj + " contains no configurations");
+
+			for (auto& file : files) {
+				input.inputs.push_back(file);
+			}
+
+			// if the user did not define the configuration to get the macros and include directories from,
+			// we just choose the first one
+			definitions = configurations[0].definitions;
+			additionalIncludeDirectories = configurations[0].additionalIncludeDirectories;
+			configuration_it = configurations.begin();
+
+			while (configuration_it != configurations.end()) {
+
+				if (configuration_it->name == input.configuration) {
+					definitions = configuration_it->definitions;
+					additionalIncludeDirectories = configuration_it->additionalIncludeDirectories;
+				}
+
+				configuration_it++;
+			}
+
+			if (!definitions.empty())
+				input.cxxflags.push_back(definitions);
+
+			if (!additionalIncludeDirectories.empty()) {
+				vector<string> directories;
+
+				splitInput(directories, additionalIncludeDirectories);
+
+				for (auto& dir : directories) {
+					// because we do not which ones are system include
+					// directories and which are user include dirs, we
+					// add what we find in the vcxproj to both					
+					input.includedirsIn.push_back(dir);
+					input.sysincludedirs.push_back(dir);
+				}
+				
+			}
+
+			if (_chdir(vcxproj_dir.string().c_str()) == -1)
+				output.errorStream << "Cannot chdir to directory: "
+									<< vcxproj_dir.string()
+									<< std::endl;
+		} catch (runtime_error& ex) {			
+			throw runtime_error(string("Cannot parse: ") + input.vcxproj + ": " + ex.what());
+		}
+	}
+
 	for (auto& input : input.inputs) {
 		vector<string> inputList;
 		splitInput(inputList, input);
