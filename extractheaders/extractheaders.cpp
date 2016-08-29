@@ -331,6 +331,7 @@ void ExtractHeadersImpl::process_file(const path& filename)
 		sysincludedirs.push_back(includeDir);
 	}
 
+	input.excludeheaders.push_back("stdafx.h");
     add_system_includes(ctx);
     add_user_includes(ctx);
 
