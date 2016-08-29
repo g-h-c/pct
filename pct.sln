@@ -4,11 +4,6 @@ VisualStudioVersion = 12.0.40629.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "extractheaderslib", "extractheaders\extractheaderslib.vcxproj", "{CF1E84FC-48FB-3D48-8B4B-AF74F64C2F96}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "extractheadersgui", "extractheadersgui\extractheadersgui.vcxproj", "{6CC5CF74-39E2-3A6F-A3EA-DF688F9D7C9F}"
-	ProjectSection(ProjectDependencies) = postProject
-		{CF1E84FC-48FB-3D48-8B4B-AF74F64C2F96} = {CF1E84FC-48FB-3D48-8B4B-AF74F64C2F96}
-	EndProjectSection
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "extractheaders", "extractheaderscmd\extractheaders.vcxproj", "{CF72E5A8-AE38-3B6A-A553-55FC7FBECCA9}"
 	ProjectSection(ProjectDependencies) = postProject
 		{CF1E84FC-48FB-3D48-8B4B-AF74F64C2F96} = {CF1E84FC-48FB-3D48-8B4B-AF74F64C2F96}
@@ -24,10 +19,6 @@ Global
 		{CF1E84FC-48FB-3D48-8B4B-AF74F64C2F96}.Debug|x64.Build.0 = Debug|x64
 		{CF1E84FC-48FB-3D48-8B4B-AF74F64C2F96}.Release|x64.ActiveCfg = Release|x64
 		{CF1E84FC-48FB-3D48-8B4B-AF74F64C2F96}.Release|x64.Build.0 = Release|x64
-		{6CC5CF74-39E2-3A6F-A3EA-DF688F9D7C9F}.Debug|x64.ActiveCfg = Debug|x64
-		{6CC5CF74-39E2-3A6F-A3EA-DF688F9D7C9F}.Debug|x64.Build.0 = Debug|x64
-		{6CC5CF74-39E2-3A6F-A3EA-DF688F9D7C9F}.Release|x64.ActiveCfg = Release|x64
-		{6CC5CF74-39E2-3A6F-A3EA-DF688F9D7C9F}.Release|x64.Build.0 = Release|x64
 		{CF72E5A8-AE38-3B6A-A553-55FC7FBECCA9}.Debug|x64.ActiveCfg = Debug|x64
 		{CF72E5A8-AE38-3B6A-A553-55FC7FBECCA9}.Debug|x64.Build.0 = Debug|x64
 		{CF72E5A8-AE38-3B6A-A553-55FC7FBECCA9}.Release|x64.ActiveCfg = Release|x64
