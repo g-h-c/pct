@@ -79,7 +79,7 @@ typedef boost::wave::context<
 
 class ExtractHeadersImpl {
 public:
-	ExtractHeadersImpl(ExtractHeadersOutput& out, const ExtractHeadersInput& in);	
+	ExtractHeadersImpl(ExtractHeadersConsoleOutput& out, const ExtractHeadersInput& in);
 	void process_file(const path& filename);
 	void add_macro_definitions(context_type& context, const std::string& cxx_flags);
 	void add_system_includes(context_type& ctx);
@@ -98,7 +98,7 @@ public:
 	// same as originalInput but some parameters may contain more information E.g.
 	// input.inputs may get some elements from the .vcxproj
 	ExtractHeadersInput input;
-	ExtractHeadersOutput& output;
+	ExtractHeadersConsoleOutput& output;
 };
 
 
@@ -182,7 +182,7 @@ ExtractHeaders::ExtractHeaders()
 {	
 }
 
-ExtractHeadersImpl::ExtractHeadersImpl(ExtractHeadersOutput& out, const ExtractHeadersInput& in) :
+ExtractHeadersImpl::ExtractHeadersImpl(ExtractHeadersConsoleOutput& out, const ExtractHeadersInput& in) :
     originalInput(in),
 	input(in),
 	output(out)
@@ -196,7 +196,7 @@ void ExtractHeaders::write_stdafx()
 	impl->write_stdafx();
 }
 
-void ExtractHeaders::run(ExtractHeadersOutput& output, const ExtractHeadersInput& input)
+void ExtractHeaders::run(ExtractHeadersConsoleOutput& output, const ExtractHeadersInput& input)
 {
 	impl.reset(new ExtractHeadersImpl(output, input));
 	try {
@@ -332,6 +332,7 @@ void ExtractHeadersImpl::process_file(const path& filename)
 	}
 
 	input.excludeheaders.push_back("stdafx.h");
+	input.excludeheaders.push_back(input.outputfile);
     add_system_includes(ctx);
     add_user_includes(ctx);
 
@@ -372,17 +373,22 @@ void ExtractHeadersImpl::write_stdafx()
 	path outputpath(input.outputfile);
 	string guardname = outputpath.filename().string();
 	size_t dotpos = guardname.find_first_of(".");
-	
+	ofstream outputStream = ofstream(input.outputfile);
 	guardname = guardname.substr(0, dotpos);
 
 	for (auto & c : guardname)
 		c = toupper(c);
-		
+			
+	if (!outputStream.is_open()) {
+		cerr << "Cannot open: " << input.outputfile;
+		exit(EXIT_FAILURE);
+	}
+
 	if (input.pragma) 
-	output.outputStream << "#pragma once\n\n";    
+		outputStream << "#pragma once\n\n";    
 	else {
-		output.outputStream << "#ifndef " + guardname + "_H\n";
-		output.outputStream << "#define " + guardname + "_H\n";
+		outputStream << "#ifndef " + guardname + "_H\n";
+		outputStream << "#define " + guardname + "_H\n";
 	}
 
 	for (auto header : systemheaders) {
@@ -391,7 +397,7 @@ void ExtractHeadersImpl::write_stdafx()
 
 		while (header_it != output.headersfound.end()) {
 			if (header_it->find(headername) != string::npos) {
-				output.outputStream << "#include " << *header_it << "\n";
+				outputStream << "#include " << *header_it << "\n";
 				output.headersfound.erase(header_it);
 				break;
 			}
@@ -400,7 +406,7 @@ void ExtractHeadersImpl::write_stdafx()
 	}
 
 	if (!input.pragma) 
-		output.outputStream << "#endif\n";
+		outputStream << "#endif\n";
 }
 
 // splits a semicolon-separated list of words and returns a vector
@@ -431,9 +437,10 @@ void ExtractHeadersImpl::run()
 			VcxprojParsing parser(input.vcxproj.c_str());
 			vector<ProjectConfiguration> configurations;
 			vector<ProjectConfiguration>::iterator configuration_it;
-			std::vector<std::string> files;
-			std::string definitions;
-			std::string additionalIncludeDirectories;
+			vector<string> files;
+			string definitions;
+			string additionalIncludeDirectories;
+			string precompiledHeaderFile;
 			path vcxproj_dir = path(input.vcxproj).remove_filename();
 			 
 			parser.parse(configurations, files);
@@ -449,6 +456,7 @@ void ExtractHeadersImpl::run()
 			// we just choose the first one
 			definitions = configurations[0].definitions;
 			additionalIncludeDirectories = configurations[0].additionalIncludeDirectories;
+			precompiledHeaderFile = configurations[0].precompiledHeaderFile;
 			configuration_it = configurations.begin();
 
 			while (configuration_it != configurations.end()) {
@@ -456,6 +464,7 @@ void ExtractHeadersImpl::run()
 				if (configuration_it->name == input.configuration) {
 					definitions = configuration_it->definitions;
 					additionalIncludeDirectories = configuration_it->additionalIncludeDirectories;
+					precompiledHeaderFile = configuration_it->precompiledHeaderFile;
 				}
 
 				configuration_it++;
@@ -478,6 +487,9 @@ void ExtractHeadersImpl::run()
 				}
 				
 			}
+
+			if (!precompiledHeaderFile.empty())
+				input.outputfile = precompiledHeaderFile;
 
 			if (_chdir(vcxproj_dir.string().c_str()) == -1)
 				output.errorStream << "Cannot chdir to directory: "

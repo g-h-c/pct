@@ -9,6 +9,7 @@ struct ProjectConfiguration {
 	std::string name;
 	std::string definitions;
 	std::string additionalIncludeDirectories;
+	std::string precompiledHeaderFile;
 };
 
 struct Project {

@@ -16,6 +16,8 @@ struct ExtractHeadersInput {
 	std::vector<std::string> cxxflags;
 	std::string vcxproj;
 	std::string configuration;
+	std::string sln;
+
 	// TODO g-h-c
 	std::vector<std::string> excludedirs;
 	
@@ -25,13 +27,11 @@ struct ExtractHeadersInput {
 	bool pragma;
 };
 
-struct ExtractHeadersOutput {
-	ExtractHeadersOutput(std::ostream& errStream,
-						std::ostream& infStream,
-						std::ostream& outStream) :
+struct ExtractHeadersConsoleOutput {
+	ExtractHeadersConsoleOutput(std::ostream& errStream,
+						std::ostream& infStream) :
 		errorStream(errStream),
-		infoStream(infStream),
-		outputStream(outStream)
+		infoStream(infStream)
 	{
 	}
 
@@ -40,18 +40,22 @@ struct ExtractHeadersOutput {
 	// precompiled header, to keep relatives paths, case, etc.
 	std::vector<std::string> headersfound;
 	std::ostream& errorStream;
-	std::ostream& infoStream;
-	std::ostream& outputStream;
+	std::ostream& infoStream;	
 };
 
 class ExtractHeadersImpl;
 
+// Generates a precompiled headers for one project at a time. I.e. a .vcxproj file.
+// To generate precompiled headers for a complete solution, this class needs to
+// be instantiated for each vcxproj
 class ExtractHeaders {
 public:
 	ExtractHeaders();
 	~ExtractHeaders();
 	void write_stdafx();	
-	void run(ExtractHeadersOutput& output, const ExtractHeadersInput& input);
+	// @outputfile absolute path where the precompiled header should be written,
+	// 
+	void run(ExtractHeadersConsoleOutput& output, const ExtractHeadersInput& input);
 
 private:
 	std::unique_ptr<ExtractHeadersImpl> impl;

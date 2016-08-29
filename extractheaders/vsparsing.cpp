@@ -56,6 +56,7 @@ void VcxprojParsing::parse(vector<ProjectConfiguration>& configurations,
 				XMLElement* clCompile = itemDefinitionGroup->FirstChildElement("ClCompile");
 				XMLElement* definitions = clCompile? clCompile->FirstChildElement("PreprocessorDefinitions") : NULL;
 				XMLElement* includeDirs = clCompile ? clCompile->FirstChildElement("AdditionalIncludeDirectories") : NULL;
+				XMLElement* precompiledHeaderFile = clCompile ? clCompile->FirstChildElement("PrecompiledHeaderFile") : NULL;
 
 				if (definitions) {
 					configuration.definitions = definitions->FirstChild()->ToText()->Value();
@@ -67,6 +68,9 @@ void VcxprojParsing::parse(vector<ProjectConfiguration>& configurations,
 
 				if (includeDirs) 
 					configuration.additionalIncludeDirectories = includeDirs->FirstChild()->ToText()->Value();
+
+				if (precompiledHeaderFile)
+					configuration.precompiledHeaderFile = precompiledHeaderFile->FirstChild()->ToText()->Value();
 				
 			}
 			itemDefinitionGroup = itemDefinitionGroup->NextSiblingElement("ItemDefinitionGroup");
