@@ -41,7 +41,7 @@ void readOptions(ExtractHeadersInput& input, int argc, char** argv)
 		("def,D", po::value<vector<string>>(&input.cxxflags)->composing(),
 		"macros to be defined. Separated by semicolon E.g. --def _M_X64;_WIN32;WIN32")
 		("vcxproj", po::value<string>(&input.vcxproj),
-		"The Visual Studio project file the precompiled header will be generated for. Gets file inputs and macros from it. This option is incompatible with sln")
+		"The Visual Studio project file the precompiled header will be generated for. Used to get input file paths, macros, include directories and precompiled header location. This option is incompatible with sln")
 		("sln", po::value<string>(&input.sln),
 		"Generates precompiled headers for all the projects specified in the solution. This option is incompatible with vcxproj")
 		("configuration", po::value<string>(&input.configuration),
