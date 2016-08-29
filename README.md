@@ -4,7 +4,7 @@ Pct (PreCompiled header tool) aims to be a bag of tools to help reducing and ana
 
 ##extractheaders
 
-Analyses C / C++ file to generate a precompiled header. The precompiled header will consist of the standard headers that are included in the provided files (or any header included by the files recursively). It uses Boost Wave Preprocessor to do so. It can get its input from Visual Studio project files (.vcxproj and .sln).
+Analyses C / C++ files to generate a precompiled header. It can get its input from Visual Studio project files (.vcxproj and .sln) or they can be specified explicitly through command line options. The precompiled header will consist of the standard headers that are included in the provided files (or any header included by the files recursively). It uses Boost Wave Preprocessor under the hood. 
 
 Usage example:
 
