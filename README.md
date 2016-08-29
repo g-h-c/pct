@@ -72,7 +72,7 @@ system() will invoke extractheaders in this case, generating the appropiate stda
 
 **Compilation**
 
-Requires boost libraries and C++ 11 compliant compiler. The least Boost version I tried was 1.58.0. I have only worked on 64 bits, a 32 bits build should work but I have not tested it.
+Requires boost libraries and C++ 11 compliant compiler. The environment variable BOOST_HOME needs to be set to point to the root of Boost libraries (ant the binaries are expected to be at %BOOST_HOME%\stage\lib). The least Boost version I tried was 1.58.0. I have only worked on 64 bits, a 32 bits build should work but I have not tested it.
 
 **Blog entry**
 
