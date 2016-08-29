@@ -170,10 +170,19 @@ vector<string> getAllDirsInDir(const char* dir)
 
 bool subpath(const vector<string> paths, const string& path)
 {
+	vector<string>::const_iterator path_it = paths.begin();
+	boost::filesystem::path canonical_path = boost::filesystem::canonical(path);
+
+	while (path_it != paths.end()) {
+		boost::filesystem::path exclude_path = boost::filesystem::canonical(*path_it);
+
+		if (canonical_path.string().find(exclude_path.string()) != string::npos)
+			return true;
+
+		path_it++;
+	}
+
 	return false;
-	/*// TODO GerardoHernandez
-	assert(false);
-	return false;*/
 }
 
 

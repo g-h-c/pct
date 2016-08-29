@@ -30,6 +30,8 @@ void readOptions(ExtractHeadersInput& input, int argc, char** argv)
 		"specify a directory which files will be not included in the precompiled header (nor its subfolders, recursively)")*/
 		("excludeheader", po::value<vector<string> >(&input.excludeheaders)->composing(),
 		"specify a header file that will not be included in the precompiled header, nor it will be processed. This option is case insensitive.")
+		("excludedir", po::value<vector<string> >(&input.excludedirs)->composing(),
+		"Specify directories which files will not be added to the precompiled header.")
 		("includeheader", po::value<vector<string> >(&input.includeheaders)->composing(),
 		"specify a user header that will be included in the precompiled header, even if it was in a user include path")
 		("sysinclude,S", po::value<vector<string> >(&input.sysincludedirs)->composing(),
