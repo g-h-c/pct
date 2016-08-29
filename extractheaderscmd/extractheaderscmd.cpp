@@ -104,7 +104,7 @@ int main(int argc, char** argv)
 		cout << endl;
 	}
 	
-	if (!input.vcxproj.empty() && input.sln.empty()) {
+	if (!input.vcxproj.empty() && !input.sln.empty()) {
 		cerr << "Cannot specify options --vcxproj and --sln at the same time";
 		exit(EXIT_FAILURE);
 	}

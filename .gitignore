@@ -4,3 +4,7 @@ ipch/
 *.suo
 *.opendb
 *.db
+extractheaderscmd/debug/
+extractheaderscmd/release/
+extractheaders/debug/
+extractheaders/release/
