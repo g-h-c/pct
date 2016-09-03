@@ -523,7 +523,7 @@ void ExtractHeadersImpl::run()
 				}
 			}
 			else if (!exists(input_path))
-				throw runtime_error("Cannot find: " + input_path + "\n");
+				output.errorStream << "Cannot find: " << input_path << "\n";
 			else
 				userheadersqueue.push(boost::filesystem::canonical(input));
 		}
