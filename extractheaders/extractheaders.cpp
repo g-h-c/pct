@@ -393,6 +393,8 @@ void ExtractHeadersImpl::write_stdafx()
 		exit(EXIT_FAILURE);
 	}
 
+    outputStream << "/* Machine generated code */\n\n";
+
 	if (input.pragma) 
 		outputStream << "#pragma once\n\n";    
 	else {
@@ -400,6 +402,7 @@ void ExtractHeadersImpl::write_stdafx()
 		outputStream << "#define " + guardname + "_H\n";
 	}
 
+    
 	for (auto header : systemheaders) {
 		string headername = header.filename().string();
 		auto header_it = output.headersfound.begin();
