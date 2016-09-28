@@ -185,6 +185,15 @@ bool subpath(const vector<string> paths, const string& path)
 	return false;
 }
 
+string trim(string& str)
+{
+    size_t first = str.find_first_not_of(' ');
+    size_t last = str.find_last_not_of(' ');
+
+    return str.substr(first, (last - first + 1));
+}
+
+
 
 ExtractHeaders::ExtractHeaders()
 
@@ -408,10 +417,25 @@ void ExtractHeadersImpl::write_stdafx()
 		auto header_it = output.headersfound.begin();
 
 		while (header_it != output.headersfound.end()) {
-			if (header_it->find(headername) != string::npos) {
-				outputStream << "#include " << *header_it << "\n";
-				output.headersfound.erase(header_it);
-				break;
+            if (header_it->find(headername) != string::npos) {
+                string trimmed_headername = trim(*header_it);
+
+                if (trimmed_headername.size() >= 2 &&
+                    (trimmed_headername)[0] == '"' &&
+                    trimmed_headername[trimmed_headername.size() - 1] == '"') {
+                    string unquoted = trimmed_headername;
+
+                    unquoted.erase(0, 1);
+                    unquoted.resize(unquoted.size() - 1);
+
+                    if (find(input.includeheaders.begin(), input.includeheaders.end(), unquoted) == input.includeheaders.end())
+                       break;
+                } 
+
+                outputStream << "#include " << *header_it << "\n";
+                output.headersfound.erase(header_it);
+                break;
+            
 			}
 			header_it++;
 		}
