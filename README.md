@@ -92,6 +92,11 @@ This may be caused by trying to include a system header using quotes, e.g. #incl
 
 This may be cause because one the preprocessed files does not include an end-of-line at the end of the file.
 
+> error: Windows Kits\8.1\Include\shared\ws2def.h(221): error C2011: 'sockaddr' : 'struct' type redefinition
+
+winsock2.h and windows.h are sensitive to the order in which they are included. winsock2.h must be included before windows.h or you can #define WIN32_LEAN_AND_MEAN if you do not need rarely used windows.h stuff
+
+
 
 
 
