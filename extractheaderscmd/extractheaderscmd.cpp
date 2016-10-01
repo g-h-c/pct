@@ -33,7 +33,7 @@ void readOptions(ExtractHeadersInput& input, int argc, char** argv)
 		("excludedir", po::value<vector<string> >(&input.excludedirs)->composing(),
 		"Specify directories which files will not be added to the precompiled header.")
 		("includeheader", po::value<vector<string> >(&input.includeheaders)->composing(),
-		"specify a user header that will be included in the precompiled header, even if it was in a user include path")
+		"specify a user header that will be included in the precompiled header, even if it was in a user include path. Written without brackets or quotes. E.g. stdio.h")
 		("sysinclude,S", po::value<vector<string> >(&input.sysincludedirs)->composing(),
 		"specify an additional system or thirdparty include directory")
 		("sysincludetree,S", po::value<vector<string> >(&input.sysincludetreedirs)->composing(),
