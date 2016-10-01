@@ -4,9 +4,15 @@ Pct (PreCompiled header tool) aims to be a bag of tools to help reducing and ana
 
 ##extractheaders
 
-Analyses C / C++ files to generate a precompiled header. It can get its input from Visual Studio project files (.vcxproj and .sln) or they can be specified explicitly through command line options. The precompiled header will consist of the standard headers that are included in the provided files (or any header included by the files recursively). It uses Boost Wave Preprocessor under the hood. 
+Analyses C / C++ files to generate a precompiled header. It can get its input from Visual Studio project files (.vcxproj and .sln) or they can be specified explicitly through command line options. The precompiled header will consist of the standard headers that are included in the provided files (or any header included by the files recursively). It uses Boost Wave Preprocessor under the hood.
 
-Usage example:
+extractheaders can read Visual Studio project files with the options --sln and --vcxproj. E.g.
+
+--sln c:\\path\\to\\mysolution.sln --sysinclude "C:\\Program Files (x86)\\Microsoft Visual Studio 12.0\\VC\\include" --configuration "Debug|x64"
+
+This command line will parse all the .vcxproj in mysolution.sln, and will generate the precompiled headers according to the macros and include paths specified in the configuration Debug|x64
+
+If you do not have Visual Studio project files, you can specifiy which are your inputs like this:
 
 --sysinclude "C:\\Program Files (x86)\\Microsoft Visual Studio 12.0\\VC\\include" --sysinclude C:\\Qt\\Qt5.6.0\\5.6\\msvc2013_64\\include --sysinclude C:\\Qt\\Qt5.6.0\\5.6\\msvc2013_64\\include\\QtCore --def "_WIN32;WIN32;_M_X64_" --input c:\\path\\to\\file.cpp --include c:\\path\\to\\ 
 
@@ -44,11 +50,6 @@ will generate this precompiled header:
 #endif
 ```
 
-extractheaders can read Visual Studio project files with the options --sln and --vcxproj. E.g.
-
---sln c:\\path\\to\\mysolution.sln --sysinclude "C:\\Program Files (x86)\\Microsoft Visual Studio 12.0\\VC\\include" --configuration "Debug|x64"
-
-This command line will parse all the .vcxproj in mysolution.sln, and will generate the precompiled headers according to the macros and include paths specified in the configuration Debug|x64
 
 extractheaders can also be easily integrated with qmake. Imagine the previous example was built with this .pro file:
 
@@ -69,6 +70,8 @@ system(extractheaders --sysinclude \"c:\\Program Files (x86)\\Microsoft Visual S
 ```
 
 system() will invoke extractheaders in this case, generating the appropiate stdafx.h. The first two loops will generate the necessary arguments that the tool needs.
+
+It may also be easier to generate Visual Studio project files with qmake and then tell extractheaders to parse them: https://cppisland.wordpress.com/2015/11/15/cross-platform-development-with-c/
 
 **Compilation**
 
