@@ -132,12 +132,12 @@ int main(int argc, char** argv)
 			mutex consoleMutex;
 
 
-			for (auto& project : projects) {
+			for (auto& project : projects) {				
 				make_absolute(project.location, absolute_path);
 				input.vcxproj = project.location;
 				futures.resize(futures.size() + 1);
 
-				futures.back() = async(std::launch::async, [&](){
+				futures.back() = async(std::launch::async, [&, input](){
 					stringstream outputStream;
 					stringstream errStream;
 					ExtractHeaders extractHeaders;
