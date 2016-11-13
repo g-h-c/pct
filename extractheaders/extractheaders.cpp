@@ -217,9 +217,9 @@ ExtractHeaders::ExtractHeaders()
 }
 
 ExtractHeadersImpl::ExtractHeadersImpl(ExtractHeadersConsoleOutput& out, const ExtractHeadersInput& in) :
-originalInput(in),
-input(in),
-output(out)
+    originalInput(in),
+	input(in),
+	output(out)
 {
 
 }
@@ -584,7 +584,13 @@ void ExtractHeadersImpl::run()
 		}
 	}
 
-	output.errorStream << "Processing " << userheadersqueue.size() << " reported includes" << std::endl;
+	if (!input.vcxproj.empty()) {
+		output.infoStream << endl;
+		output.infoStream << "********************************************************************************" << endl;
+		output.infoStream << "Generating precompiled header for " << input.vcxproj << endl;
+	}
+	output.errorStream << "Processing " << userheadersqueue.size() << " reported includes" << endl;
+
 	while (!userheadersqueue.empty()) {
 		path header = userheadersqueue.front();
 		if (headersprocessed.count(header) == 0) {

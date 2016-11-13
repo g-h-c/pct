@@ -21,6 +21,7 @@ struct ExtractHeadersInput {
 	
 	int nesting;
 	std::string outputfile;
+	bool singlecore;
 	bool verbose;
 	bool pragma;
 };

@@ -24,7 +24,7 @@ public:
 	// @throw std::runtime_error If the file could not be opened
 	VcxprojParsing(const char* path);
 	void parse(std::vector<ProjectConfiguration>& configurations,
-						std::vector<std::string>& files);	
+			   std::vector<std::string>& files);	
 
 private:
 

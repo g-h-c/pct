@@ -50,6 +50,8 @@ void readOptions(ExtractHeadersInput& input, int argc, char** argv)
 		("pragma", "If specified, #pragma once will be added to the output, instead of the include guards")
 		("output,o", po::value<string>(&input.outputfile)->default_value("stdafx.h"),
 		"output file. This option will be ignored if the project file specified via --vcxproj or --sln already specify a precompiled header file")
+		("singlecore",
+		"Do not use multiple threads to process the input (applies only if the --sln option was specified)")
 		("verbose", "Verbose output")
 		("help,h", "Produces this help")
 		/*#if BOOST_WAVE_SUPPORT_PRAGMA_ONCE != 0
@@ -85,13 +87,14 @@ void readOptions(ExtractHeadersInput& input, int argc, char** argv)
 		
 	input.verbose = vm.count("verbose") > 0;
 	input.pragma = vm.count("pragma") > 0;
+	input.singlecore = vm.count("singlecore") > 0;
 }
 
 int main(int argc, char** argv)
 {
 	ofstream out;
 	ExtractHeadersInput input;
-	ExtractHeadersConsoleOutput output(cerr, cout);
+	
 
 	string outputfile;
 
@@ -113,6 +116,7 @@ int main(int argc, char** argv)
 	try {
 		if (input.sln.empty()) {
 			ExtractHeaders extractHeaders;
+			ExtractHeadersConsoleOutput output(cerr, cout);
 
 			extractHeaders.run(output, input);
 			extractHeaders.write_stdafx();
@@ -124,27 +128,41 @@ int main(int argc, char** argv)
 			path absolute_path = canonical(sln_path).remove_filename();
 			vector<future<void>> futures;
 			parsing.parse(projects);
+			// prevents cout and cerr flushing text to the console at the same time
+			mutex consoleMutex;
+
 
 			for (auto& project : projects) {
-				/*if (_chdir(absolute_path.string().c_str()) == -1)
-					output.errorStream << "Cannot chdir to directory: "
-					<< sln_path.remove_filename().string()
-					<< std::endl;*/
-
 				make_absolute(project.location, absolute_path);
 				input.vcxproj = project.location;
 				futures.resize(futures.size() + 1);
+
 				futures.back() = async(std::launch::async, [&](){
+					stringstream outputStream;
+					stringstream errStream;
 					ExtractHeaders extractHeaders;
+					ExtractHeadersConsoleOutput output(errStream, outputStream);
 
 					extractHeaders.run(output, input);
 					extractHeaders.write_stdafx();
+
+
+					{
+						lock_guard<mutex> guard(consoleMutex);
+
+						cout << outputStream.str();
+						cerr << errStream.str();
+				    }
 				});
 
+				if (input.singlecore)
+					futures.back().wait();
 			}
 
-			for (auto& future : futures) {
-				future.wait();
+			if (!input.singlecore) {
+				for (auto& future : futures) {
+					future.wait();
+				}
 			}
 		}
 	}
