@@ -86,13 +86,13 @@ public:
 	void add_user_includes(context_type& ctx);
 	void write_stdafx();
 	void run();
-	
+
 	queue<path> userheadersqueue;
 	set<path> headersprocessed;
 	set<path> includedirs;
 	vector<string> sysincludedirs;
 	// system or thirdparty headers
-	set<boost::filesystem::path> systemheaders;	
+	set<boost::filesystem::path> systemheaders;
 
 	const ExtractHeadersInput& originalInput;
 	// same as originalInput but some parameters may contain more information E.g.
@@ -119,10 +119,10 @@ bool iscplusplusfile(path filepath)
 	unsigned int pos = 0;
 
 	while (extensions[pos]) {
-	if (file_ext == extensions[pos])
-	return true;
+		if (file_ext == extensions[pos])
+			return true;
 
-	pos++;
+		pos++;
 	}
 
 	return false;
@@ -137,9 +137,9 @@ vector<string> getAllFilesInDir(const char* dir)
 
 	if (exists(path) && is_directory(path))
 	{
-	for (directory_iterator dir_iter(path); dir_iter != end_iter; ++dir_iter)
-	{
-		if (is_regular_file(dir_iter->status()) &&
+		for (directory_iterator dir_iter(path); dir_iter != end_iter; ++dir_iter)
+		{
+			if (is_regular_file(dir_iter->status()) &&
 				iscplusplusfile(dir_iter->path()))
 				result.push_back(dir_iter->path().string());
 		}
@@ -187,25 +187,25 @@ bool subpath(const vector<string> paths, const string& path)
 
 string trim(string& str)
 {
-    size_t first = str.find_first_not_of(' ');
-    size_t last = str.find_last_not_of(' ');
+	size_t first = str.find_first_not_of(' ');
+	size_t last = str.find_last_not_of(' ');
 
-    return str.substr(first, (last - first + 1));
+	return str.substr(first, (last - first + 1));
 }
 
 
 
 ExtractHeaders::ExtractHeaders()
 
-{	
+{
 }
 
 ExtractHeadersImpl::ExtractHeadersImpl(ExtractHeadersConsoleOutput& out, const ExtractHeadersInput& in) :
-    originalInput(in),
-	input(in),
-	output(out)
+originalInput(in),
+input(in),
+output(out)
 {
-	
+
 }
 
 void ExtractHeaders::write_stdafx()
@@ -219,14 +219,15 @@ void ExtractHeaders::run(ExtractHeadersConsoleOutput& output, const ExtractHeade
 	impl.reset(new ExtractHeadersImpl(output, input));
 	try {
 		impl->run();
-	} catch (std::exception& e) {
+	}
+	catch (std::exception& e) {
 		output.errorStream << e.what() << endl;
 	}
 }
 
 void ExtractHeadersImpl::add_macro_definitions(context_type& context, const string& cxx_flags)
 {
-    string definition;
+	string definition;
 
 	if (!cxx_flags.empty()) {
 		for (auto elem : cxx_flags) {
@@ -245,7 +246,7 @@ void ExtractHeadersImpl::add_macro_definitions(context_type& context, const stri
 
 void ExtractHeadersImpl::add_system_includes(context_type& ctx)
 {
-	
+
 	for (auto& sysdir : input.sysincludetreedirs) {
 
 		sysincludedirs.push_back(sysdir);
@@ -260,9 +261,9 @@ void ExtractHeadersImpl::add_system_includes(context_type& ctx)
 		}
 	}
 
-	for (auto dir : sysincludedirs)  {		
+	for (auto dir : sysincludedirs)  {
 		ctx.add_sysinclude_path(dir.c_str());
-    }
+	}
 }
 
 void ExtractHeadersImpl::add_user_includes(context_type& ctx)
@@ -277,19 +278,19 @@ void ExtractHeadersImpl::add_user_includes(context_type& ctx)
 			for (auto& dir : dirs) {
 
 				includedirs.insert(boost::filesystem::canonical(dir));
-		}
+			}
 		}
 	}
 
 	for (auto dir : includedirs)  {
-		ctx.add_include_path(dir.string().c_str());		
+		ctx.add_include_path(dir.string().c_str());
 	}
 }
 
 void ExtractHeadersImpl::process_file(const path& filename)
 {
-//  create the wave::context object and initialize it from the file to
-//  preprocess (may contain options inside of special comments)
+	//  create the wave::context object and initialize it from the file to
+	//  preprocess (may contain options inside of special comments)
 
 	std::ifstream instream(filename.string().c_str());
 	string instr;
@@ -302,29 +303,29 @@ void ExtractHeadersImpl::process_file(const path& filename)
 	hooks.impl = this;
 	instream.unsetf(std::ios::skipws);
 	instr = std::string(std::istreambuf_iterator<char>(instream.rdbuf()),
-		std::istreambuf_iterator<char>());    
+		std::istreambuf_iterator<char>());
 
-	if (input.verbose) 
+	if (input.verbose)
 		output.infoStream << "Preprocessing input file: " << filename.generic_string()
-			              << "..." << std::endl;
+		<< "..." << std::endl;
 
-    context_type ctx(instr.begin(),
-		             instr.end(),
-					 filename.string().c_str(),
-					hooks);
+	context_type ctx(instr.begin(),
+		instr.end(),
+		filename.string().c_str(),
+		hooks);
 
 	//  add special predefined macros
 
 	// TODO GerardoHernandez configure this in the command line
 	ctx.set_language(language_support(support_cpp11 |
-		                              support_option_variadics |
-									  support_option_long_long |
-									  support_option_include_guard_detection 
-									 ));
+		support_option_variadics |
+		support_option_long_long |
+		support_option_include_guard_detection
+		));
 	// it is best not to go too deep, headers like <iostream> on windows
 	// give problem with boost wave
 	ctx.set_max_include_nesting_depth(input.nesting);
-	
+
 	for (auto def : input.cxxflags) {
 
 		if (def.back() == ';')
@@ -336,7 +337,7 @@ void ExtractHeadersImpl::process_file(const path& filename)
 			cxxflagsstr += ";" + def;
 	}
 
-    add_macro_definitions(ctx, cxxflagsstr);
+	add_macro_definitions(ctx, cxxflagsstr);
 
 	for (const auto& includeDir : input.includedirsIn)
 	{
@@ -351,8 +352,8 @@ void ExtractHeadersImpl::process_file(const path& filename)
 
 	input.excludeheaders.push_back("stdafx.h");
 	input.excludeheaders.push_back(input.outputfile);
-    add_system_includes(ctx);
-    add_user_includes(ctx);
+	add_system_includes(ctx);
+	add_user_includes(ctx);
 
 	//  preprocess the input, loop over all generated tokens collecting the
 	//  generated text
@@ -360,29 +361,31 @@ void ExtractHeadersImpl::process_file(const path& filename)
 	end = ctx.end();
 
 	// perform actual preprocessing
-	do  
+	do
 	{
-	using namespace boost::wave;
+		using namespace boost::wave;
 
-	try {
-		++it;
-		// operator != could also throw an exception
-		is_end = it != end;
-	} catch (boost::wave::cpplexer::lexing_exception const& e) {
+		try {
+			++it;
+			// operator != could also throw an exception
+			is_end = it != end;
+		}
+		catch (boost::wave::cpplexer::lexing_exception const& e) {
 
 			std::string filename = e.file_name();
 			output.errorStream
-					<< filename << "(" << e.line_no() << "): "
-					<< "Lexical error: " << e.description() << std::endl;      
+				<< filename << "(" << e.line_no() << "): "
+				<< "Lexical error: " << e.description() << std::endl;
 			break;
-	} catch (boost::wave::cpp_exception const& e) {
+		}
+		catch (boost::wave::cpp_exception const& e) {
 			if (e.get_errorcode() != preprocess_exception::include_nesting_too_deep) {
 				std::string filename = e.file_name();
 				output.errorStream
 					<< filename << "(" << e.line_no() << "): "
 					<< e.description() << std::endl;
 			}
-	}
+		}
 	} while (!is_end);
 }
 
@@ -396,52 +399,52 @@ void ExtractHeadersImpl::write_stdafx()
 
 	for (auto & c : guardname)
 		c = toupper(c);
-			
+
 	if (!outputStream.is_open()) {
 		cerr << "Cannot open: " << input.outputfile;
 		exit(EXIT_FAILURE);
 	}
 
-    outputStream << "/* Machine generated code */\n\n";
+	outputStream << "/* Machine generated code */\n\n";
 
-	if (input.pragma) 
-		outputStream << "#pragma once\n\n";    
+	if (input.pragma)
+		outputStream << "#pragma once\n\n";
 	else {
 		outputStream << "#ifndef " + guardname + "_H\n";
 		outputStream << "#define " + guardname + "_H\n";
 	}
 
-    
+
 	for (auto header : systemheaders) {
 		string headername = header.filename().string();
 		auto header_it = output.headersfound.begin();
 
 		while (header_it != output.headersfound.end()) {
-            if (header_it->find(headername) != string::npos) {
-                string trimmed_headername = trim(*header_it);
+			if (header_it->find(headername) != string::npos) {
+				string trimmed_headername = trim(*header_it);
 
-                if (trimmed_headername.size() >= 2 &&
-                    (trimmed_headername)[0] == '"' &&
-                    trimmed_headername[trimmed_headername.size() - 1] == '"') {
-                    string unquoted = trimmed_headername;
+				if (trimmed_headername.size() >= 2 &&
+					(trimmed_headername)[0] == '"' &&
+					trimmed_headername[trimmed_headername.size() - 1] == '"') {
+					string unquoted = trimmed_headername;
 
-                    unquoted.erase(0, 1);
-                    unquoted.resize(unquoted.size() - 1);
+					unquoted.erase(0, 1);
+					unquoted.resize(unquoted.size() - 1);
 
-                    if (find(input.includeheaders.begin(), input.includeheaders.end(), unquoted) == input.includeheaders.end())
-                       break;
-                } 
+					if (find(input.includeheaders.begin(), input.includeheaders.end(), unquoted) == input.includeheaders.end())
+						break;
+				}
 
-                outputStream << "#include " << *header_it << "\n";
-                output.headersfound.erase(header_it);
-                break;
-            
+				outputStream << "#include " << *header_it << "\n";
+				output.headersfound.erase(header_it);
+				break;
+
 			}
 			header_it++;
 		}
 	}
 
-	if (!input.pragma) 
+	if (!input.pragma)
 		outputStream << "#endif\n";
 }
 
@@ -478,7 +481,7 @@ void ExtractHeadersImpl::run()
 			string additionalIncludeDirectories;
 			string precompiledHeaderFile;
 			path vcxproj_dir = path(input.vcxproj).remove_filename();
-			 
+
 			parser.parse(configurations, files);
 
 			if (configurations.empty())
@@ -521,7 +524,7 @@ void ExtractHeadersImpl::run()
 					input.includedirsIn.push_back(dir);
 					input.sysincludedirs.push_back(dir);
 				}
-				
+
 			}
 
 			if (!precompiledHeaderFile.empty())
@@ -529,9 +532,10 @@ void ExtractHeadersImpl::run()
 
 			if (_chdir(vcxproj_dir.string().c_str()) == -1)
 				output.errorStream << "Cannot chdir to directory: "
-									<< vcxproj_dir.string()
-									<< std::endl;
-		} catch (runtime_error& ex) {			
+				<< vcxproj_dir.string()
+				<< std::endl;
+		}
+		catch (runtime_error& ex) {
 			throw runtime_error(string("Cannot parse: ") + input.vcxproj + ": " + ex.what());
 		}
 	}
@@ -565,7 +569,7 @@ void ExtractHeadersImpl::run()
 		}
 
 		userheadersqueue.pop();
-	}		
+	}
 }
 
 std::string& strtolower(std::string& str)

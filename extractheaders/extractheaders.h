@@ -16,9 +16,7 @@ struct ExtractHeadersInput {
 	std::vector<std::string> cxxflags;
 	std::string vcxproj;
 	std::string configuration;
-	std::string sln;
-
-	// TODO g-h-c
+	std::string sln;	
 	std::vector<std::string> excludedirs;
 	
 	int nesting;

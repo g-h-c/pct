@@ -1,5 +1,6 @@
 #include "extractheaders.h"
 #include "vsparsing.h"
+#include <future>
 #include <boost/program_options.hpp>
 #include <boost/filesystem/operations.hpp>
 #include <direct.h>
@@ -91,9 +92,9 @@ void readOptions(ExtractHeadersInput& input, int argc, char** argv)
 int main(int argc, char** argv)
 {
 	ofstream out;
-	ExtractHeadersInput input;	
+	ExtractHeadersInput input;
 	ExtractHeadersConsoleOutput output(cerr, cout);
-	ExtractHeaders extractHeaders;
+
 	string outputfile;
 
 	readOptions(input, argc, argv);
@@ -105,14 +106,16 @@ int main(int argc, char** argv)
 		}
 		cout << endl;
 	}
-	
+
 	if (!input.vcxproj.empty() && !input.sln.empty()) {
 		cerr << "Cannot specify options --vcxproj and --sln at the same time";
 		exit(EXIT_FAILURE);
 	}
-		
+
 	try {
 		if (input.sln.empty()) {
+			ExtractHeaders extractHeaders;
+
 			extractHeaders.run(output, input);
 			extractHeaders.write_stdafx();
 		}
@@ -121,7 +124,7 @@ int main(int argc, char** argv)
 			SlnParsing parsing(input.sln.c_str());
 			path sln_path(input.sln);
 			path absolute_path = canonical(sln_path).remove_filename();
-
+			vector<future<void>> futures;
 			parsing.parse(projects);
 
 			for (auto& project : projects) {
@@ -131,18 +134,26 @@ int main(int argc, char** argv)
 					<< std::endl;
 
 				input.vcxproj = project.location;
-				extractHeaders.run(output, input);
+				futures.resize(futures.size() + 1);
+				futures.back() = async(std::launch::async, [&](){
+					ExtractHeaders extractHeaders;
 
+					extractHeaders.run(output, input);
+					extractHeaders.write_stdafx();
+				});
 
+			}
 
-
-				extractHeaders.write_stdafx();
+			for (auto& future : futures) {
+				future.wait();
 			}
 		}
-	} catch (std::exception& e) {
+	}
+	catch (std::exception& e) {
 		cerr << e.what();
 		exit(EXIT_FAILURE);
 	}
 
 	return EXIT_SUCCESS;
 }
+
