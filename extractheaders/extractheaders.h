@@ -45,6 +45,8 @@ struct ExtractHeadersConsoleOutput {
 
 class ExtractHeadersImpl;
 
+void make_absolute(std::string& oldpath, const boost::filesystem::path& dir);
+
 // Generates a precompiled headers for one project at a time. I.e. a .vcxproj file.
 // To generate precompiled headers for a complete solution, this class needs to
 // be instantiated for each vcxproj

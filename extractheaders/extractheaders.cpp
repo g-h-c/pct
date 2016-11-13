@@ -83,7 +83,7 @@ public:
 	void process_file(const path& filename);
 	void add_macro_definitions(context_type& context, const std::string& cxx_flags);
 	void add_system_includes(context_type& ctx);
-	void add_user_includes(context_type& ctx);
+	void add_user_includes(context_type& ctx, const boost::filesystem::path& filename);
 	void write_stdafx();
 	void run();
 	
@@ -165,6 +165,22 @@ vector<string> getAllDirsInDir(const char* dir)
 	}
 
 	return result;
+}
+
+void make_absolute(string& oldpath, const path& dir)
+{
+	
+	path newpath(oldpath.c_str());
+
+	if (!newpath.is_absolute()) {
+		try {
+			newpath = boost::filesystem::canonical(newpath, dir);
+			oldpath = newpath.string();
+		}
+		catch (std::exception& e) {
+			// TODO ghc log this error somehow?			
+		}	
+	}
 }
 
 
@@ -265,8 +281,10 @@ void ExtractHeadersImpl::add_system_includes(context_type& ctx)
     }
 }
 
-void ExtractHeadersImpl::add_user_includes(context_type& ctx)
+void ExtractHeadersImpl::add_user_includes(context_type& ctx, const path& filename)
 {
+	path filepath(filename);
+
 	for (auto& userdir : input.includetreedirs) {
 
 		includedirs.insert(boost::filesystem::canonical(userdir));
@@ -284,6 +302,8 @@ void ExtractHeadersImpl::add_user_includes(context_type& ctx)
 	for (auto dir : includedirs)  {
 		ctx.add_include_path(dir.string().c_str());		
 	}
+
+	ctx.add_include_path(filepath.remove_filename().string().c_str());
 }
 
 void ExtractHeadersImpl::process_file(const path& filename)
@@ -298,6 +318,7 @@ void ExtractHeadersImpl::process_file(const path& filename)
 	bool is_end = false;
 	string cxxflagsstr;
 	find_includes_hooks <token_type> hooks;
+	
 
 	hooks.impl = this;
 	instream.unsetf(std::ios::skipws);
@@ -352,7 +373,7 @@ void ExtractHeadersImpl::process_file(const path& filename)
 	input.excludeheaders.push_back("stdafx.h");
 	input.excludeheaders.push_back(input.outputfile);
     add_system_includes(ctx);
-    add_user_includes(ctx);
+    add_user_includes(ctx, filename);
 
 	//  preprocess the input, loop over all generated tokens collecting the
 	//  generated text
@@ -477,14 +498,15 @@ void ExtractHeadersImpl::run()
 			string definitions;
 			string additionalIncludeDirectories;
 			string precompiledHeaderFile;
-			path vcxproj_dir = path(input.vcxproj).remove_filename();
+			path vcxproj_dir = canonical(path(input.vcxproj).remove_filename());
 			 
 			parser.parse(configurations, files);
 
 			if (configurations.empty())
 				throw runtime_error("File: " + input.vcxproj + " contains no configurations");
 
-			for (auto& file : files) {
+			for (auto file : files) {
+				make_absolute(file, vcxproj_dir);
 				input.inputs.push_back(file);
 			}
 
@@ -514,23 +536,26 @@ void ExtractHeadersImpl::run()
 
 				splitInput(directories, additionalIncludeDirectories);
 
-				for (auto& dir : directories) {
+				for (auto dir : directories) {
 					// because we do not which ones are system include
 					// directories and which are user include dirs, we
 					// add what we find in the vcxproj to both					
+					make_absolute(dir, vcxproj_dir);
 					input.includedirsIn.push_back(dir);
 					input.sysincludedirs.push_back(dir);
 				}
 				
 			}
 
-			if (!precompiledHeaderFile.empty())
+			if (!precompiledHeaderFile.empty()) {
+				make_absolute(precompiledHeaderFile, vcxproj_dir);
 				input.outputfile = precompiledHeaderFile;
+			}
 
-			if (_chdir(vcxproj_dir.string().c_str()) == -1)
+			/*if (_chdir(vcxproj_dir.string().c_str()) == -1)
 				output.errorStream << "Cannot chdir to directory: "
 									<< vcxproj_dir.string()
-									<< std::endl;
+									<< std::endl;*/
 		} catch (runtime_error& ex) {			
 			throw runtime_error(string("Cannot parse: ") + input.vcxproj + ": " + ex.what());
 		}

@@ -15,8 +15,6 @@ using namespace std;
 
 void readOptions(ExtractHeadersInput& input, int argc, char** argv)
 {
-	
-
 	desc_options.add_options()
 		("input", po::value<vector<string> >(&input.inputs)->composing(),
 		"Files/directory to parse in search of standard/thirdparty includes. In case of directories only .c .cc .cpp .cxx files will be parsed (and the headers included in those)"
@@ -125,11 +123,12 @@ int main(int argc, char** argv)
 			parsing.parse(projects);
 
 			for (auto& project : projects) {
-				if (_chdir(absolute_path.string().c_str()) == -1)
+				/*if (_chdir(absolute_path.string().c_str()) == -1)
 					output.errorStream << "Cannot chdir to directory: "
 					<< sln_path.remove_filename().string()
-					<< std::endl;
+					<< std::endl;*/
 
+				make_absolute(project.location, absolute_path);
 				input.vcxproj = project.location;
 				extractHeaders.run(output, input);
 
