@@ -4,9 +4,15 @@ Pct (PreCompiled header tool) aims to be a bag of tools to help reducing and ana
 
 ##extractheaders
 
-Analyses C / C++ files to generate a precompiled header. It can get its input from Visual Studio project files (.vcxproj and .sln) or they can be specified explicitly through command line options. The precompiled header will consist of the standard headers that are included in the provided files (or any header included by the files recursively). It uses Boost Wave Preprocessor under the hood. 
+Analyses C / C++ files to generate a precompiled header. It can get its input from Visual Studio project files (.vcxproj and .sln) or they can be specified explicitly through command line options. The precompiled header will consist of the standard headers that are included in the provided files (or any header included by the files recursively). It uses Boost Wave Preprocessor under the hood.
 
-Usage example:
+extractheaders can read Visual Studio project files with the options --sln and --vcxproj. E.g.
+
+--sln c:\\path\\to\\mysolution.sln --sysinclude "C:\\Program Files (x86)\\Microsoft Visual Studio 12.0\\VC\\include" --configuration "Debug|x64"
+
+This command line will parse all the .vcxproj in mysolution.sln, and will generate the precompiled headers according to the macros and include paths specified in the configuration Debug|x64
+
+If you do not have Visual Studio project files, you can specifiy which are your inputs like this:
 
 --sysinclude "C:\\Program Files (x86)\\Microsoft Visual Studio 12.0\\VC\\include" --sysinclude C:\\Qt\\Qt5.6.0\\5.6\\msvc2013_64\\include --sysinclude C:\\Qt\\Qt5.6.0\\5.6\\msvc2013_64\\include\\QtCore --def "_WIN32;WIN32;_M_X64_" --input c:\\path\\to\\file.cpp --include c:\\path\\to\\ 
 
@@ -44,11 +50,6 @@ will generate this precompiled header:
 #endif
 ```
 
-extractheaders can read Visual Studio project files with the options --sln and --vcxproj. E.g.
-
---sln c:\\path\\to\\mysolution.sln --sysinclude "C:\\Program Files (x86)\\Microsoft Visual Studio 12.0\\VC\\include" --configuration "Debug|x64"
-
-This command line will parse all the .vcxproj in mysolution.sln, and will generate the precompiled headers according to the macros and include paths specified in the configuration Debug|x64
 
 extractheaders can also be easily integrated with qmake. Imagine the previous example was built with this .pro file:
 
@@ -68,7 +69,9 @@ for (it, INCLUDEPATH) {
 system(extractheaders --sysinclude \"c:\\Program Files (x86)\\Microsoft Visual Studio 12.0\\VC\\include\\" --sysincludetree C:\\Qt\\Qt5.6.0\\5.6\\msvc2013_64\\include --def "_WIN32;WIN32;_M_X64;_IOSTREAM_" $$INPUT_ARGUMENTS $$INCLUDE_ARGUMENTS)
 ```
 
-system() will invoke extractheaders in this case, generating the appropiate stdafx.h. The first two loops will generate the necessary arguments that the tool needs.
+system() will invoke extractheaders in this case, generating the appropiate stdafx.h. The first two loops will generate the necessary arguments that the tool needs. The option --sysincludetree comes in handy to include all the Qt include subfolders.
+
+It may also be easier to generate Visual Studio project files with qmake and then tell extractheaders to parse them: https://cppisland.wordpress.com/2015/11/15/cross-platform-development-with-c/
 
 **Compilation**
 
@@ -91,6 +94,11 @@ This may be caused by trying to include a system header using quotes, e.g. #incl
 > error: ill formed preprocessor directive: #include "aheader.h"
 
 This may be cause because one the preprocessed files does not include an end-of-line at the end of the file.
+
+> error: Windows Kits\8.1\Include\shared\ws2def.h(221): error C2011: 'sockaddr' : 'struct' type redefinition
+
+winsock2.h and windows.h are sensitive to the order in which they are included. winsock2.h must be included before windows.h or you can #define WIN32_LEAN_AND_MEAN if you do not need rarely used windows.h stuff
+
 
 
 

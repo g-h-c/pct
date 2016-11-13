@@ -16,8 +16,6 @@ using namespace std;
 
 void readOptions(ExtractHeadersInput& input, int argc, char** argv)
 {
-	
-
 	desc_options.add_options()
 		("input", po::value<vector<string> >(&input.inputs)->composing(),
 		"Files/directory to parse in search of standard/thirdparty includes. In case of directories only .c .cc .cpp .cxx files will be parsed (and the headers included in those)"
@@ -34,7 +32,7 @@ void readOptions(ExtractHeadersInput& input, int argc, char** argv)
 		("excludedir", po::value<vector<string> >(&input.excludedirs)->composing(),
 		"Specify directories which files will not be added to the precompiled header.")
 		("includeheader", po::value<vector<string> >(&input.includeheaders)->composing(),
-		"specify a user header that will be included in the precompiled header, even if it was in a user include path")
+		"specify a user header that will be included in the precompiled header, even if it was in a user include path. Written without brackets or quotes. E.g. stdio.h")
 		("sysinclude,S", po::value<vector<string> >(&input.sysincludedirs)->composing(),
 		"specify an additional system or thirdparty include directory")
 		("sysincludetree,S", po::value<vector<string> >(&input.sysincludetreedirs)->composing(),
@@ -128,11 +126,12 @@ int main(int argc, char** argv)
 			parsing.parse(projects);
 
 			for (auto& project : projects) {
-				if (_chdir(absolute_path.string().c_str()) == -1)
+				/*if (_chdir(absolute_path.string().c_str()) == -1)
 					output.errorStream << "Cannot chdir to directory: "
 					<< sln_path.remove_filename().string()
-					<< std::endl;
+					<< std::endl;*/
 
+				make_absolute(project.location, absolute_path);
 				input.vcxproj = project.location;
 				futures.resize(futures.size() + 1);
 				futures.back() = async(std::launch::async, [&](){
