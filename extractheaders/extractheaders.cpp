@@ -580,7 +580,7 @@ void ExtractHeadersImpl::run()
 			else if (!exists(input_path))
 				output.errorStream << "Cannot find: " << input_path << "\n";
 			else
-				userheadersqueue.push(boost::filesystem::canonical(input));
+				userheadersqueue.push(boost::filesystem::canonical(input_path));
 		}
 	}
 
