@@ -32,8 +32,9 @@ void VcxprojParsing::parse(vector<ProjectConfiguration>& configurations,
 
 			while (projectConfiguration) {
 				const char* label = projectConfiguration->Attribute("Include");
+				const char* configurationName = projectConfiguration->FirstChildElement("Configuration")->GetText();
 
-				configurations.push_back({label});
+				configurations.push_back({label, configurationName});
 				projectConfiguration = projectConfiguration->NextSiblingElement("ProjectConfiguration");
 			}
 		}

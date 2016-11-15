@@ -6,6 +6,7 @@
 #include <boost/wave.hpp>
 #include <boost/wave/cpplexer/cpp_lex_token.hpp>
 #include <boost/wave/cpplexer/cpp_lex_iterator.hpp>
+#include <boost/algorithm/string/replace.hpp>
 #include <string>
 #include <queue>
 #include <set>
@@ -503,17 +504,13 @@ void ExtractHeadersImpl::run()
 			string definitions;
 			string additionalIncludeDirectories;
 			string precompiledHeaderFile;
+			string configurationName;
 			path vcxproj_dir = canonical(path(input.vcxproj).remove_filename());
-			 
+
 			parser.parse(configurations, files);
 
 			if (configurations.empty())
 				throw runtime_error("File: " + input.vcxproj + " contains no configurations");
-
-			for (auto file : files) {
-				make_absolute(file, vcxproj_dir);
-				input.inputs.push_back(file);
-			}
 
 			// if the user did not define the configuration to get the macros and include directories from,
 			// we just choose the first one
@@ -528,6 +525,7 @@ void ExtractHeadersImpl::run()
 					definitions = configuration_it->definitions;
 					additionalIncludeDirectories = configuration_it->additionalIncludeDirectories;
 					precompiledHeaderFile = configuration_it->precompiledHeaderFile;
+					configurationName = configuration_it->configuration;
 				}
 
 				configuration_it++;
@@ -536,12 +534,20 @@ void ExtractHeadersImpl::run()
 			if (!definitions.empty())
 				input.cxxflags.push_back(definitions);
 
+			for (auto file : files) {
+				boost::replace_all(file, "$(Configuration)", configurationName);
+				make_absolute(file, vcxproj_dir);
+				input.inputs.push_back(file);
+			}
+
 			if (!additionalIncludeDirectories.empty()) {
 				vector<string> directories;
 
 				splitInput(directories, additionalIncludeDirectories);
 
 				for (auto dir : directories) {
+					boost::replace_all(dir, "$(Configuration)", configurationName);
+
 					// because we do not which ones are system include
 					// directories and which are user include dirs, we
 					// add what we find in the vcxproj to both					
