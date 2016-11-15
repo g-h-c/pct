@@ -90,7 +90,7 @@ public:
 	queue<path> userheadersqueue;
 	set<path> headersprocessed;
 	set<path> includedirs;
-	vector<string> sysincludedirs;
+	set<string> sysincludedirs;
 	// system or thirdparty headers
 	set<boost::filesystem::path> systemheaders;
 
@@ -265,14 +265,14 @@ void ExtractHeadersImpl::add_system_includes(context_type& ctx)
 
 	for (auto& sysdir : input.sysincludetreedirs) {
 
-		sysincludedirs.push_back(sysdir);
+		sysincludedirs.insert(sysdir);
 
 		if (is_directory(sysdir)) {
 			vector<string> dirs = getAllDirsInDir(sysdir.c_str());
 
 			for (auto& dir : dirs) {
 
-				sysincludedirs.push_back(dir);
+				sysincludedirs.insert(dir);
 			}
 		}
 	}
@@ -368,7 +368,7 @@ void ExtractHeadersImpl::process_file(const path& filename)
 
 	for (const auto& includeDir : input.sysincludedirs)
 	{
-		sysincludedirs.push_back(includeDir);
+		sysincludedirs.insert(includeDir);
 	}
 
 	input.excludeheaders.push_back("stdafx.h");
