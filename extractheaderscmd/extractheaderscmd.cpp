@@ -42,9 +42,11 @@ void readOptions(ExtractHeadersInput& input, int argc, char** argv)
 		("def,D", po::value<vector<string>>(&input.cxxflags)->composing(),
 		"macros to be defined. Separated by semicolon E.g. --def _M_X64;_WIN32;WIN32")
 		("vcxproj", po::value<string>(&input.vcxproj),
-		"The Visual Studio project file the precompiled header will be generated for. Used to get input file paths, macros, include directories and precompiled header location. This option is incompatible with sln")
+		"The Visual Studio project file the precompiled header will be generated for. Used to get input file paths, macros, include directories and precompiled header location. "
+        "Note that most of the Visual Studio build macros are not supported. Example of unsupported build macro: $(VSInstallDir). This option is incompatible with --sln")
 		("sln", po::value<string>(&input.sln),
-		"Generates precompiled headers for all the projects specified in the solution. This option is incompatible with vcxproj")
+		"Generates precompiled headers for all the projects specified in the solution. Note that most of the Visual Studio build macros are not supported. Example "
+        "of unsupported build macro: $(VSInstallDir). This option is incompatible with --vcxproj")
 		("configuration", po::value<string>(&input.configuration),
 		"When --vcxproj is defined, the configuration to read macro definitions from. e.g. Debug|x64")
 		("pragma", "If specified, #pragma once will be added to the output, instead of the include guards")
