@@ -15,6 +15,7 @@
 #include <sstream>
 #include <functional>
 #include <direct.h>
+#include <regex>
 using namespace std;
 using namespace boost;
 using namespace wave;
@@ -170,7 +171,7 @@ vector<string> getAllDirsInDir(const char* dir)
 
 void make_absolute(string& oldpath, const path& dir)
 {
-	
+
 	path newpath(oldpath.c_str());
 
 	if (!newpath.is_absolute()) {
@@ -179,8 +180,8 @@ void make_absolute(string& oldpath, const path& dir)
 			oldpath = newpath.string();
 		}
 		catch (std::exception& e) {
-			// TODO ghc log this error somehow?			
-		}	
+			// TODO ghc log this error somehow?
+		}
 	}
 }
 
@@ -320,7 +321,7 @@ void ExtractHeadersImpl::process_file(const path& filename)
 	bool is_end = false;
 	string cxxflagsstr;
 	find_includes_hooks <token_type> hooks;
-	
+
 
 	hooks.impl = this;
 	instream.unsetf(std::ios::skipws);
@@ -412,12 +413,12 @@ void ExtractHeadersImpl::process_file(const path& filename)
 }
 
 void ExtractHeadersImpl::write_stdafx()
-{	
+{
 	path outputpath(input.outputfile);
 	string guardname = outputpath.filename().string();
 	size_t dotpos = guardname.find_first_of(".");
 	ofstream outputStream;
-			
+
     outputStream = ofstream(input.outputfile);
 	guardname = guardname.substr(0, dotpos);
 
@@ -470,6 +471,8 @@ void ExtractHeadersImpl::write_stdafx()
 
 	if (!input.pragma)
 		outputStream << "#endif\n";
+
+	output.infoStream << "Precompiled header generated at: " << input.outputfile << endl;
 }
 
 // splits a semicolon-separated list of words and returns a vector
@@ -550,7 +553,7 @@ void ExtractHeadersImpl::run()
 
 					// because we do not which ones are system include
 					// directories and which are user include dirs, we
-					// add what we find in the vcxproj to both					
+					// add what we find in the vcxproj to both
 					make_absolute(dir, vcxproj_dir);
 					input.includedirsIn.push_back(dir);
 					input.sysincludedirs.push_back(dir);
@@ -565,7 +568,7 @@ void ExtractHeadersImpl::run()
 
 			make_absolute(input.outputfile, vcxproj_dir);
 
-		} catch (runtime_error& ex) {			
+		} catch (runtime_error& ex) {
 			throw runtime_error(string("Cannot parse: ") + input.vcxproj + ": " + ex.what());
 		}
 	}
@@ -595,19 +598,30 @@ void ExtractHeadersImpl::run()
 		output.infoStream << "********************************************************************************" << endl;
 		output.infoStream << "Generating precompiled header for " << input.vcxproj << endl;
 	}
-	output.errorStream << "Processing " << userheadersqueue.size() << " reported includes" << endl;
+	output.infoStream << "Processing " << userheadersqueue.size() << " reported includes" << endl;
 
 	while (!userheadersqueue.empty()) {
 		path header = userheadersqueue.front();
+
+
 		if (headersprocessed.count(header) == 0) {
-			process_file(header);
+			auto regexp_it = input.excluderegexp.begin();
+			bool match = false;
+			regex excluderegexp(*regexp_it);
+
+			while (regexp_it != input.excluderegexp.end() &&
+				   !(match = regex_match(header.filename().string(), excluderegexp))) {
+				regexp_it++;
+			}
+
+			if (!match)
+			   process_file(header);
+
 			headersprocessed.insert(header);
 		}
 
 		userheadersqueue.pop();
 	}
-
-	
 }
 
 std::string& strtolower(std::string& str)

@@ -31,6 +31,8 @@ void readOptions(ExtractHeadersInput& input, int argc, char** argv)
 		"specify a header file that will not be included in the precompiled header, nor it will be processed. This option is case insensitive.")
 		("excludedir", po::value<vector<string> >(&input.excludedirs)->composing(),
 		"Specify directories which files will not be added to the precompiled header.")
+		("excluderegexp", po::value<vector<string>>(&input.excluderegexp)->composing(),
+		"An ECMAScript regexp defining the files which filename will be not processed. E.g.  moc_.* will allow to exclude Qt moc files, even if they are referenced by a .vcxproj or appear in a folder that was supposed to be processed")
 		("includeheader", po::value<vector<string> >(&input.includeheaders)->composing(),
 		"specify a user header that will be included in the precompiled header, even if it was in a user include path. Written without brackets or quotes. E.g. stdio.h")
 		("sysinclude,S", po::value<vector<string> >(&input.sysincludedirs)->composing(),
@@ -57,7 +59,7 @@ void readOptions(ExtractHeadersInput& input, int argc, char** argv)
 		/*#if BOOST_WAVE_SUPPORT_PRAGMA_ONCE != 0
 		("noguard,G", "disable include guard detection")
 		#endif*/
-		// it may interesting to be able to specify a directory as input from user 
+		// it may interesting to be able to specify a directory as input from user
 		// and also to allow an option -r to do it recursively
 		;
 
@@ -84,7 +86,7 @@ void readOptions(ExtractHeadersInput& input, int argc, char** argv)
 	for (auto& header : input.excludeheaders) {
 		strtolower(header);
 	}
-		
+
 	input.verbose = vm.count("verbose") > 0;
 	input.pragma = vm.count("pragma") > 0;
 	input.singlecore = vm.count("singlecore") > 0;
@@ -94,7 +96,7 @@ int main(int argc, char** argv)
 {
 	ofstream out;
 	ExtractHeadersInput input;
-	
+
 
 	string outputfile;
 
@@ -132,7 +134,7 @@ int main(int argc, char** argv)
 			mutex consoleMutex;
 
 
-			for (auto& project : projects) {				
+			for (auto& project : projects) {
 				make_absolute(project.location, absolute_path);
 				input.vcxproj = project.location;
 				futures.resize(futures.size() + 1);

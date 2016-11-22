@@ -16,9 +16,10 @@ struct ExtractHeadersInput {
 	std::vector<std::string> cxxflags;
 	std::string vcxproj;
 	std::string configuration;
-	std::string sln;	
+	std::string sln;
 	std::vector<std::string> excludedirs;
-	
+	std::vector<std::string> excluderegexp;
+
 	int nesting;
 	std::string outputfile;
 	bool singlecore;
@@ -39,7 +40,7 @@ struct ExtractHeadersConsoleOutput {
 	// precompiled header, to keep relatives paths, case, etc.
 	std::vector<std::string> headersfound;
 	std::ostream& errorStream;
-	std::ostream& infoStream;	
+	std::ostream& infoStream;
 };
 
 class ExtractHeadersImpl;
@@ -53,9 +54,9 @@ class ExtractHeaders {
 public:
 	ExtractHeaders();
 	~ExtractHeaders();
-	void write_stdafx();	
+	void write_stdafx();
 	// @outputfile absolute path where the precompiled header should be written,
-	// 
+	//
 	void run(ExtractHeadersConsoleOutput& output, const ExtractHeadersInput& input);
 
 private:
