@@ -71,7 +71,7 @@ system(extractheaders --sysinclude \"c:\\Program Files (x86)\\Microsoft Visual S
 
 system() will invoke extractheaders in this case, generating the appropiate stdafx.h. The first two loops will generate the necessary arguments that the tool needs. The option --sysincludetree comes in handy to include all the Qt include subfolders.
 
-The option --excluderegexp "moc_.*" avoids processing Qt's moc-generated files, which otherwise will generate a lot of errors.
+The option --excluderegexp "moc_.*" avoids processing Qt moc-generated files, which otherwise will generate a lot of errors.
 
 It may also be easier to generate Visual Studio project files with qmake and then tell extractheaders to parse them: https://cppisland.wordpress.com/2015/11/15/cross-platform-development-with-c/
 
