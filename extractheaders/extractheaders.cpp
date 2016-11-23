@@ -607,7 +607,10 @@ void ExtractHeadersImpl::run()
 		if (headersprocessed.count(header) == 0) {
 			auto regexp_it = input.excluderegexp.begin();
 			bool match = false;
-			regex excluderegexp(*regexp_it);
+            regex excluderegexp;
+            
+            if (regexp_it != input.excluderegexp.end())
+                excluderegexp = regex(*regexp_it);
 
 			while (regexp_it != input.excluderegexp.end() &&
 				   !(match = regex_match(header.filename().string(), excluderegexp))) {
