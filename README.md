@@ -1,4 +1,4 @@
-# pct
+# pct [![AppVeyor build](https://ci.appveyor.com/api/projects/status/uiue2rplcirf0a38?svg=true)](https://ci.appveyor.com/project/g-h-c/pct/)
 
 Pct (PreCompiled header tool) aims to be a bag of tools to help reducing and analysing C/C++ compilation times. There is only one tool for now, extractheaders.
 
