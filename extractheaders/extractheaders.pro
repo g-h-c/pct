@@ -15,6 +15,4 @@ tinyxml2.cpp \
 vsparsing.cpp
 
 INCLUDEPATH += $(BOOST_HOME)
-LIBS += -L$(BOOST_HOME)/stage/lib
-
-
+LIBS += -L$(BOOST_LIB)
