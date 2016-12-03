@@ -473,7 +473,7 @@ void ExtractHeadersImpl::write_stdafx()
 	if (!input.pragma)
 		outputStream << "#endif\n";
 
-	output.infoStream << "Precompiled header generated at: " << input.outputfile << endl;
+	output.infoStream << "Precompiled header generated at: " << canonical(input.outputfile).string() << endl;
 }
 
 // splits a semicolon-separated list of words and returns a vector
