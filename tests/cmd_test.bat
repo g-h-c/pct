@@ -9,7 +9,7 @@ IF %errorlevel% neq 0 (
 )
 
 echo Comparing output with reference...
-diff readmeexample_test\pct_test\stdafx.h readmeexample_test\pct_test\expected.h
+diffutils\bin\diff readmeexample_test\pct_test\stdafx.h readmeexample_test\pct_test\expected.h
 echo.
 
 IF %errorlevel% equ 0 (
