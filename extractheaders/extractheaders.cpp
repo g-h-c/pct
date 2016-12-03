@@ -176,7 +176,7 @@ void make_absolute(string& oldpath, const path& dir)
 
 	if (!newpath.is_absolute()) {
 		try {
-			newpath = boost::filesystem::canonical(newpath, dir);
+			newpath = boost::filesystem::absolute(newpath, dir);
 			oldpath = newpath.string();
 		}
 		catch (std::exception& e) {
