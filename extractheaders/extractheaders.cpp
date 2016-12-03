@@ -374,6 +374,7 @@ void ExtractHeadersImpl::process_file(const path& filename)
 	}
 
 	input.excludeheaders.push_back("stdafx.h");
+	input.excludeheaders.push_back("stdafx.cpp");
 	input.excludeheaders.push_back(input.outputfile);
     add_system_includes(ctx);
     add_user_includes(ctx, filename);
@@ -608,7 +609,7 @@ void ExtractHeadersImpl::run()
 			auto regexp_it = input.excluderegexp.begin();
 			bool match = false;
             regex excluderegexp;
-            
+
             if (regexp_it != input.excluderegexp.end())
                 excluderegexp = regex(*regexp_it);
 
@@ -617,7 +618,7 @@ void ExtractHeadersImpl::run()
 				regexp_it++;
 			}
 
-			if (!match)
+			if (!match && find(input.excludeheaders.begin(), input.excludeheaders.end(), header.filename().string()) == input.excludeheaders.end())
 			   process_file(header);
 
 			headersprocessed.insert(header);
