@@ -2,7 +2,7 @@ rem Tests extractheaders when invoked with the --sln option.
 rem Requires the environment variable %CONFIGURATION% to be set
 @echo off
 
-rm readmeexample_test\pct_test\stdafx.h
+del readmeexample_test\pct_test\stdafx.h 2>NUL
 ..\extractheaderscmd\%CONFIGURATION%\extractheaders --sln readmeexample_test\readmeexample.sln --sysinclude "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\include"
 
 IF %errorlevel% neq 0 (
@@ -11,7 +11,7 @@ IF %errorlevel% neq 0 (
 )
 
 echo Comparing output with reference...
-diffutils\bin\diff stdafx.h readmeexample_test\pct_test\expected.h
+diffutils\bin\diff readmeexample_test\pct_test\stdafx.h readmeexample_test\pct_test\expected.h
 echo.
 
 IF %errorlevel% equ 0 (
