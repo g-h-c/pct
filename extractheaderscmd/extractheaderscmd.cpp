@@ -127,7 +127,7 @@ int main(int argc, char** argv)
 		}
 		else {
 			vector<Project> projects;
-			SlnParsing parsing(input.sln.c_str());
+			SlnParsing parsing(input.sln.c_str(), cerr);
 			path sln_path(input.sln);
 			path absolute_path = canonical(sln_path).remove_filename();
 			vector<future<void>> futures;

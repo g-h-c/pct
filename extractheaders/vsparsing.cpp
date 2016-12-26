@@ -9,7 +9,9 @@
 using namespace tinyxml2;
 using namespace std;
 
-VcxprojParsing::VcxprojParsing(const char* path)
+VcxprojParsing::VcxprojParsing(const char* path,
+	                           std::ostream& errStream)
+	: errorStream(errStream)
 {				
 	if (doc.LoadFile(path) != XMLError::XML_SUCCESS)
 		throw runtime_error(string("Cannot open: ") + path + ": " + doc.ErrorName());
@@ -17,27 +19,31 @@ VcxprojParsing::VcxprojParsing(const char* path)
 
 }
 
-void replaceEnvVars(string& paths)
-{
-	
+void VcxprojParsing::replaceEnvVars(string& paths)
+{	
 	regex rgx("%(.+?)%");
 	smatch match;	
-	size_t matchcounter = 0;
-	string result;
-	
-	result = paths;
+	string remaining;
+		
+	remaining = paths;
+	paths.clear();
 
-	while (regex_search(result,
+	while (regex_search(remaining,
 		                match,
 		                rgx)) {
 		const char* envvarvalue = getenv(match[1].str().c_str());
-		
-		result = match.prefix().str() + 
-			     (envvarvalue ? envvarvalue : match[0].str().c_str()) +
-			     match.suffix().str();
+		string completeMatch = match[0].str();
+
+		paths += match.prefix().str() + 
+			     (envvarvalue ? envvarvalue : completeMatch.c_str());
+		remaining = match.suffix().str();
+
+		if (!envvarvalue)
+			errorStream << "Error: Environment variable not set: " << completeMatch << "\n";
 	}
 
-	paths = result;
+	if (!remaining.empty())
+		paths += remaining;
 
 }
 
@@ -109,7 +115,8 @@ void VcxprojParsing::parse(vector<ProjectConfiguration>& configurations,
 
 }
 
-SlnParsing::SlnParsing(const char* path)
+SlnParsing::SlnParsing(const char* path, std::ostream& errStream)
+	: errorStream(errStream)
 {
 	ifstream file(path);
 	string line;

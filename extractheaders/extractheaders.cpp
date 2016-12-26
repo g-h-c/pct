@@ -501,7 +501,7 @@ void ExtractHeadersImpl::run()
 {
 	if (!input.vcxproj.empty()) {
 		try {
-			VcxprojParsing parser(input.vcxproj.c_str());
+			VcxprojParsing parser(input.vcxproj.c_str(), output.errorStream);
 			vector<ProjectConfiguration> configurations;
 			vector<ProjectConfiguration>::iterator configuration_it;
 			vector<string> files;
