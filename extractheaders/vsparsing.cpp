@@ -21,16 +21,19 @@ VcxprojParsing::VcxprojParsing(const char* path,
 
 void VcxprojParsing::replaceEnvVars(string& paths)
 {	
-	regex rgx("%(.+?)%");
+	// both %MYVAR% or $(MYVAR) syntaxes would be expanded as environment
+	// variables in .vcxproj 
+	regex rgxDollar("\\$\\((.+?)\\)");    
+	regex rgxPercentage("%(.+?)%");    
 	smatch match;	
 	string remaining;
-		
+	
 	remaining = paths;
 	paths.clear();
 
 	while (regex_search(remaining,
 		                match,
-		                rgx)) {
+		                rgxDollar)) {
 		const char* envvarvalue = getenv(match[1].str().c_str());
 		string completeMatch = match[0].str();
 
@@ -38,8 +41,28 @@ void VcxprojParsing::replaceEnvVars(string& paths)
 			     (envvarvalue ? envvarvalue : completeMatch.c_str());
 		remaining = match.suffix().str();
 
+		if (!envvarvalue && completeMatch != "$(Configuration)")
+			errorStream << "Error: Variable not set: " << completeMatch << "\n";
+	}
+
+	if (!remaining.empty())
+		paths += remaining;
+
+	remaining = paths;
+	paths.clear();
+
+	while (regex_search(remaining,
+		                match,
+		                rgxPercentage)) {
+		const char* envvarvalue = getenv(match[1].str().c_str());
+		string completeMatch = match[0].str();
+
+		paths += match.prefix().str() +
+			(envvarvalue ? envvarvalue : completeMatch.c_str());
+		remaining = match.suffix().str();
+
 		if (!envvarvalue)
-			errorStream << "Error: Environment variable not set: " << completeMatch << "\n";
+			errorStream << "Environment variable not set: " << completeMatch << "\n";
 	}
 
 	if (!remaining.empty())
