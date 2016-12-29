@@ -97,7 +97,7 @@ Add the path to Windows SDK user mode header files, for instance with: --sysincl
 
 This may be caused by trying to include a system header using quotes, e.g. #include "string.h" or trying to include a user header using angle brackets, e.g. #include \<myinclude.h\>. Best solution would be to be consistent with the normal convention, use quotes for user headers and angle bracket for system headers.
 
-> error: ill formed preprocessor directive: #include "aheader.h"
+> pct hangs or says: error: ill formed preprocessor directive: #include "aheader.h"
 
 This may be cause because one the preprocessed files does not include an end-of-line at the end of the file.
 
