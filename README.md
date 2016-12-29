@@ -81,9 +81,11 @@ Requires boost libraries and C++ 11 compliant compiler. The environment variable
 
 Both qmake and Visual Studio project files are provided. The script genvs.bat could be used to generate the Visual Studio project files from the qmake ones.
 
-**Blog entry**
+**Blog entries**
 
 https://cppisland.wordpress.com/2016/06/05/introducing-pct-a-tool-to-help-reducing-cc-compilation-times/
+
+https://cppisland.wordpress.com/2016/12/28/pct-1-0-supports-visual-studio-project-files-and-is-multithreaded/
 
 **Troubleshooting**
 
