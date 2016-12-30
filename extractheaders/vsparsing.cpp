@@ -21,6 +21,7 @@ VcxprojParsing::VcxprojParsing(const char* path,
 		throw runtime_error(string("Cannot open: ") + path + ": " + doc.ErrorName());
 	
 	filepath = boost::filesystem::path(path);	
+
 	if (filepath.extension().string() == ".vcproj")
 		errStream << "Warning: when reading: " << path << ". vcproj files are not supported. Please upgrade your solution to a Visual Studio 2010 solution or later";
 }
@@ -123,9 +124,10 @@ void VcxprojParsing::parse(vector<ProjectConfiguration>& configurations,
 
 					if (definitions && definitions->FirstChild()) {
 						configuration.definitions = definitions->FirstChild()->ToText()->Value();
+						replaceEnvVars(configuration.definitions);
 
 						// replace things like %(PreprocessorDefinitions) which extract headers cannot understand
-						configuration.definitions = regex_replace(configuration.definitions, regex("%\\(.*\\)"), string(""));
+						configuration.definitions = regex_replace(configuration.definitions, regex("%\\(.*\\)"), string(""));						
 					}
 
 					if (includeDirs && includeDirs->FirstChild()) {
