@@ -7,7 +7,7 @@
 #include <iostream>
 
 
-boost::program_options::options_description desc_options;
+
 boost::program_options::variables_map vm;
 using namespace boost::filesystem;
 using namespace boost::program_options;
@@ -16,6 +16,8 @@ using namespace std;
 
 void readOptions(ExtractHeadersInput& input, int argc, char** argv)
 {
+	boost::program_options::options_description desc_options("", 1000, 500);
+
 	desc_options.add_options()
 		("input", po::value<vector<string> >(&input.inputs)->composing(),
 		"Files/directory to parse in search of standard/thirdparty includes. In case of directories only .c .cc .cpp .cxx files will be parsed (and the headers included in those)"

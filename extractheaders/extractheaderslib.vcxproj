@@ -73,6 +73,8 @@
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
       <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <ForcedIncludeFiles>stdafx.h</ForcedIncludeFiles>
     </ClCompile>
     <Lib>
       <OutputFile>$(OutDir)\extractheaderslib.lib</OutputFile>
@@ -105,6 +107,8 @@
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
       <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <ForcedIncludeFiles>stdafx.h</ForcedIncludeFiles>
     </ClCompile>
     <Lib>
       <OutputFile>$(OutDir)\extractheaderslib.lib</OutputFile>
@@ -121,11 +125,16 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="extractheaders.cpp" />
+    <ClCompile Include="stdafx.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="tinyxml2.cpp" />
     <ClCompile Include="vsparsing.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="extractheaders.h" />
+    <ClInclude Include="stdafx.h" />
     <ClInclude Include="tinyxml2.h" />
     <ClInclude Include="vsparsing.h" />
   </ItemGroup>
