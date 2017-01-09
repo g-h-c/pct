@@ -75,6 +75,8 @@ The option --excluderegexp "moc_.*" avoids processing Qt moc-generated files, wh
 
 It may also be easier to generate Visual Studio project files with qmake and then tell extractheaders to parse them: https://cppisland.wordpress.com/2015/11/15/cross-platform-development-with-c/
 
+The latest command line help is at: https://ci.appveyor.com/api/projects/g-h-c/pct/artifacts/extractheaderscmd/release/help.html?job=Environment%3A%20%3B%20Configuration%3A%20Release
+
 **Compilation**
 
 Requires boost libraries and C++ 11 compliant compiler. The environment variable BOOST_HOME needs to be set to point to the root of Boost libraries and BOOST_LIB needs to point the binaries. The least Boost version I tried was 1.58.0. I have only worked on 64 bits, a 32 bits build should work but I have not tested it. Althought the Visual Studio project files were generated with version 2015, the code compiles cleanly on 2013 as well (but you may need to select ```Visual Studio 2013 (v120)``` as Platform Toolset in Configuration Properties->General.
