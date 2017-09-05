@@ -12,7 +12,7 @@ extractheaders can read Visual Studio project files with the options --sln and -
 
 This command line will parse all the .vcxproj in mysolution.sln, and will generate the precompiled headers according to the macros and include paths specified in the configuration Debug|x64
 
-If you do not have Visual Studio project files, you can specifiy which are your inputs like this:
+If you do not have Visual Studio project files, you can specify which are your inputs like this:
 
 --sysinclude "C:\\Program Files (x86)\\Microsoft Visual Studio 12.0\\VC\\include" --sysinclude C:\\Qt\\Qt5.6.0\\5.6\\msvc2013_64\\include --sysinclude C:\\Qt\\Qt5.6.0\\5.6\\msvc2013_64\\include\\QtCore --def "_WIN32;WIN32;_M_X64_" --input c:\\path\\to\\file.cpp --include c:\\path\\to\\ 
 
