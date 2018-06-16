@@ -337,16 +337,13 @@ void ExtractHeadersImpl::process_file(const path& filename)
 		filename.string().c_str(),
 		hooks);
 
-	//  add special predefined macros
-
-	// TODO GerardoHernandez configure this in the command line
 	ctx.set_language(language_support(support_cpp11 |
 		support_option_variadics |
 		support_option_long_long |
 		support_option_include_guard_detection
 		));
 	// it is best not to go too deep, headers like <iostream> on windows
-	// give problem with boost wave
+	// give problems with boost wave
 	ctx.set_max_include_nesting_depth(input.nesting);
 
 	for (auto def : input.cxxflags) {
@@ -441,12 +438,14 @@ void ExtractHeadersImpl::write_stdafx()
 	}
 
 
-	for (auto header : systemheaders) {
+	for (const auto& header : systemheaders) {
 		string headername = header.filename().string();
 		auto header_it = output.headersfound.begin();
 
 		while (header_it != output.headersfound.end()) {
-			if (header_it->find(headername) != string::npos) {
+			regex rg = regex(".*\\b" + headername + "\\b.*");
+
+			if (regex_match(*header_it, rg)) {
 				string trimmed_headername = trim(*header_it);
 
 				if (trimmed_headername.size() >= 2 &&
