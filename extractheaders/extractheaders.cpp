@@ -42,17 +42,32 @@ public:
 		path file_path(relname);
 		string filename = strtolower(string(file_path.filename().string()));
 
-		if (find(impl->input.includeheaders.begin(), impl->input.includeheaders.end(), relname) != impl->input.includeheaders.end())
+		if (impl->input.verbose) {
+			impl->output.infoStream << "opened_include_file: " << relname << ", " << absname << "," << is_system_include << std::endl;
+		}
+
+		if (find(impl->input.includeheaders.begin(), impl->input.includeheaders.end(), relname) != impl->input.includeheaders.end()) {
 			impl->systemheaders.insert(relname);
+		}
 		else {
 			if (find(impl->input.excludeheaders.begin(), impl->input.excludeheaders.end(), filename) == impl->input.excludeheaders.end()) {
-				if (!is_system_include)
-					impl->userheadersqueue.push(boost::filesystem::canonical(absname));
-				else
+				if (impl->include_all() || is_system_include) {
 					if (!subpath(impl->input.excludedirs, absname))
 						impl->systemheaders.insert(relname);
+				}
+				else {
+					if (!is_system_include)
+						impl->userheadersqueue.push(boost::filesystem::canonical(absname));
+				}
+
 			}
 		}
+	}
+
+	template <typename Context>
+	void returning_from_include_file(Context const& ctx)
+	{
+
 	}
 
 	template <typename Context>
@@ -62,11 +77,24 @@ public:
 	{
 	}
 
+	template <typename Context, typename Token>
+	void detected_pragma_once(Context const& ctx,
+		Token const& pragma_token,
+		std::string const& filename)
+	{
+
+	}
+
 	template <typename Context>
 	bool found_include_directive(Context const& ctx,
 		std::string const &filename, bool include_next)
 	{
-		impl->output.headersfound.push_back(filename);
+		if (impl->output.headersfound_num.find(filename) == impl->output.headersfound_num.end())
+			impl->output.headersfound.push_back(filename);
+		++(impl->output.headersfound_num[filename]);
+		if (impl->input.verbose) {
+			impl->output.infoStream << "found_include_directive: " << filename << "," << include_next << std::endl;
+		}
 		return false;
 	}
 
@@ -78,6 +106,24 @@ typedef boost::wave::context<
 	boost::wave::iteration_context_policies::load_file_to_string,
 	find_includes_hooks<token_type> > context_type;
 
+// splits a semicolon-separated list of words and returns a vector
+void splitInput(vector<string>& elems, const string& inputstr)
+{
+	string elem;
+
+	if (!inputstr.empty()) {
+		for (auto character : inputstr) {
+			if (character == ';') {
+				elems.push_back(elem);
+				elem.clear();
+			}
+			else
+				elem += character;
+		}
+
+		elems.push_back(elem);
+	}
+}
 
 class ExtractHeadersImpl {
 public:
@@ -88,6 +134,10 @@ public:
 	void add_user_includes(context_type& ctx, const boost::filesystem::path& filename);
 	void write_stdafx();
 	void run();
+	bool include_all()
+	{
+		return find(input.includeheaders.begin(), input.includeheaders.end(), "*") != input.includeheaders.end();
+	}
 
 	queue<path> userheadersqueue;
 	set<path> headersprocessed;
@@ -106,6 +156,29 @@ public:
 
 ExtractHeaders::~ExtractHeaders()
 {
+}
+
+int getcommonsize(path filepath, path projectdir)
+{
+	int commonsize = 0;
+	auto itfile = filepath.rbegin();
+	auto itprojdir = projectdir.rbegin();
+	for (; itfile != filepath.rend() && itprojdir != projectdir.rend();) {
+		if (*itfile != *itprojdir) {
+			if (commonsize > 0) {
+				break;
+			}
+			else {
+				++itfile;
+			}
+		}
+		else {
+			++itfile;
+			++itprojdir;
+			++commonsize;
+		}
+	}
+	return commonsize;
 }
 
 bool iscplusplusfile(path filepath)
@@ -128,6 +201,23 @@ bool iscplusplusfile(path filepath)
 	}
 
 	return false;
+}
+
+path getsrcdir(const vector<string>& files, path projectdir)
+{
+	path src_dir;
+	int curcommonsize = 0;
+	for (auto file : files) {
+		auto filepath = canonical(path(file).remove_filename());
+		if (iscplusplusfile(file)) {
+			int commonsize = getcommonsize(filepath, projectdir);
+			if (commonsize > curcommonsize) {
+				src_dir = filepath;
+				curcommonsize = commonsize;
+			}
+		}
+	}
+	return src_dir;
 }
 
 // gets all files in a dir (non-recursively)
@@ -223,7 +313,6 @@ ExtractHeadersImpl::ExtractHeadersImpl(ExtractHeadersConsoleOutput& out, const E
 	input(in),
 	output(out)
 {
-
 }
 
 void ExtractHeaders::write_stdafx()
@@ -232,32 +321,27 @@ void ExtractHeaders::write_stdafx()
 	impl->write_stdafx();
 }
 
-void ExtractHeaders::run(ExtractHeadersConsoleOutput& output, const ExtractHeadersInput& input)
+bool ExtractHeaders::run(ExtractHeadersConsoleOutput& output, const ExtractHeadersInput& input)
 {
 	impl.reset(new ExtractHeadersImpl(output, input));
 	try {
 		impl->run();
+		return true;
 	}
 	catch (std::exception& e) {
 		output.errorStream << e.what() << endl;
+		return false;
 	}
 }
 
 void ExtractHeadersImpl::add_macro_definitions(context_type& context, const string& cxx_flags)
 {
-	string definition;
-
-	if (!cxx_flags.empty()) {
-		for (auto elem : cxx_flags) {
-			if (elem == ';') {
-				context.add_macro_definition(definition, false);
-				definition.clear();
-			}
-			else
-				definition += elem;
-		}
-
+	std::vector<std::string> definitions;
+	splitInput(definitions, cxx_flags);
+	for (auto definition : definitions) {
 		context.add_macro_definition(definition, false);
+		if (input.verbose)
+			output.infoStream << "add_macro_definition: " << definition << std::endl;
 	}
 }
 
@@ -281,6 +365,8 @@ void ExtractHeadersImpl::add_system_includes(context_type& ctx)
 
 	for (auto dir : sysincludedirs)  {
 		ctx.add_sysinclude_path(dir.c_str());
+		if (input.verbose)
+			output.infoStream << "add_sysinclude_path: " << dir << std::endl;
 	}
 }
 
@@ -302,11 +388,13 @@ void ExtractHeadersImpl::add_user_includes(context_type& ctx, const path& filena
 		}
 	}
 
+	includedirs.insert(filepath.remove_filename().string().c_str());
+
 	for (auto dir : includedirs)  {
 		ctx.add_include_path(dir.string().c_str());
+		if (input.verbose)
+			output.infoStream << "add_include_path: " << dir << std::endl;
 	}
-
-	ctx.add_include_path(filepath.remove_filename().string().c_str());
 }
 
 void ExtractHeadersImpl::process_file(const path& filename)
@@ -337,7 +425,7 @@ void ExtractHeadersImpl::process_file(const path& filename)
 		filename.string().c_str(),
 		hooks);
 
-	ctx.set_language(language_support(support_cpp11 |
+	ctx.set_language(language_support(support_cpp | support_cpp11 |
 		support_option_variadics |
 		support_option_long_long |
 		support_option_include_guard_detection
@@ -361,8 +449,9 @@ void ExtractHeadersImpl::process_file(const path& filename)
 
 	for (const auto& includeDir : input.includedirsIn)
 	{
-		if (boost::filesystem::exists(includeDir))
+		if (boost::filesystem::exists(includeDir)) {
 			includedirs.insert(boost::filesystem::canonical(includeDir));
+		}
 	}
 
 	for (const auto& includeDir : input.sysincludedirs)
@@ -412,13 +501,29 @@ void ExtractHeadersImpl::process_file(const path& filename)
 
 void ExtractHeadersImpl::write_stdafx()
 {
+	if (systemheaders.empty()) {
+		output.infoStream << "No system header found." << endl;
+		return;
+	}
 	path outputpath(input.outputfile);
 	string guardname = outputpath.filename().string();
 	size_t dotpos = guardname.find_first_of(".");
-	ofstream outputStream;
+	std::ofstream outputStream;
 
-    outputStream = ofstream(input.outputfile);
+    outputStream = std::ofstream(input.outputfile);
 	guardname = guardname.substr(0, dotpos);
+
+	path outputSrcPath = outputpath.remove_filename() / path(guardname + ".cpp");
+	if (!exists(outputSrcPath)) {
+		std::ofstream outputSrcStream = std::ofstream(outputSrcPath.string());
+
+		if (!outputSrcStream.is_open()) {
+			cerr << "Cannot open: " << outputSrcPath.string();
+			exit(EXIT_FAILURE);
+		}
+
+		outputSrcStream << "#include \"" << guardname << ".h\"\n";
+	}
 
 	for (auto & c : guardname)
 		c = toupper(c);
@@ -437,37 +542,40 @@ void ExtractHeadersImpl::write_stdafx()
 		outputStream << "#define " + guardname + "_H\n";
 	}
 
-
-	for (const auto& header : systemheaders) {
-		string headername = header.filename().string();
-		auto header_it = output.headersfound.begin();
-
-		while (header_it != output.headersfound.end()) {
-			regex rg = regex(".*\\b" + headername + "\\b.*");
-
-			if (regex_match(*header_it, rg)) {
-				string trimmed_headername = trim(*header_it);
-
-				if (trimmed_headername.size() >= 2 &&
-					(trimmed_headername)[0] == '"' &&
-					trimmed_headername[trimmed_headername.size() - 1] == '"') {
-					string unquoted = trimmed_headername;
-
-					unquoted.erase(0, 1);
-					unquoted.resize(unquoted.size() - 1);
-
-					if (find(input.includeheaders.begin(), input.includeheaders.end(), unquoted) == input.includeheaders.end())
-						break;
-				}
-
-				outputStream << "#include " << *header_it << "\n";
-				output.headersfound.erase(header_it);
-				break;
-
+	if (input.mostincluded > 0) {
+		std::vector<pair<string, int>> vt(output.headersfound_num.begin(), output.headersfound_num.end());
+		sort(vt.begin(), vt.end(), [](const pair<string, int>& lhs, const pair<string, int>& rhs) -> bool {return lhs.second > rhs.second; });
+		for (auto header_num : vt) {
+			output.infoStream << header_num.first << ": " << header_num.second << endl;
+			if (header_num.second >= input.mostincluded) {
+				outputStream << "#include " << header_num.first << "\n";
 			}
-			header_it++;
 		}
 	}
+	else {
+		for (auto& header : output.headersfound) {
+			string trimmed_headername = trim(header);
+			string unquoted = trimmed_headername.substr(1, trimmed_headername.length() - 2);
+			auto header_it = systemheaders.begin();
+			while (header_it != systemheaders.end()) {
+				string headername = header_it->filename().string();
+				if (headername.find_last_of(unquoted) != std::string::npos) {
+					if (!include_all() && trimmed_headername.size() >= 2 &&
+						(trimmed_headername)[0] == '"' &&
+						trimmed_headername[trimmed_headername.size() - 1] == '"') {
+						if (find(input.includeheaders.begin(), input.includeheaders.end(), unquoted) == input.includeheaders.end())
+							break;
+					}
+
+					outputStream << "#include " << header << "\n";
+					systemheaders.erase(header_it);
+					break;
+				}
+				header_it++;
+			}
+		}
+	}
+
 
 	if (!input.pragma)
 		outputStream << "#endif\n";
@@ -475,32 +583,14 @@ void ExtractHeadersImpl::write_stdafx()
 	output.infoStream << "Precompiled header generated at: " << canonical(input.outputfile).string() << endl;
 }
 
-// splits a semicolon-separated list of words and returns a vector
-void splitInput(vector<string>& elems, const string& inputstr)
-{
-	string elem;
-
-	if (!inputstr.empty()) {
-		for (auto character : inputstr) {
-			if (character == ';') {
-				elems.push_back(elem);
-				elem.clear();
-			}
-			else
-				elem += character;
-		}
-
-		elems.push_back(elem);
-	}
-}
-
 
 // @throws runtime_error if an input path does no exist
 void ExtractHeadersImpl::run()
 {
-	if (!input.vcxproj.empty()) {
+	path src_dir;
+	if (!input.vcproj.empty()) {
 		try {
-			VcxprojParsing parser(input.vcxproj.c_str(), output.errorStream);
+			VcprojParsing parser(input.vcproj.c_str(), output.errorStream);
 			vector<ProjectConfiguration> configurations;
 			vector<ProjectConfiguration>::iterator configuration_it;
 			vector<string> files;
@@ -508,12 +598,13 @@ void ExtractHeadersImpl::run()
 			string additionalIncludeDirectories;
 			string precompiledHeaderFile;
 			string configurationName;
-			path vcxproj_dir = canonical(path(input.vcxproj).remove_filename());
+			path vcxproj_dir = canonical(path(input.vcproj).remove_filename());
 
 			parser.parse(configurations, files);
+			src_dir = getsrcdir(files, vcxproj_dir);
 
 			if (configurations.empty())
-				throw runtime_error("File: " + input.vcxproj + " contains no configurations");
+				throw runtime_error("File: " + input.vcproj + " contains no configurations");
 
 			// if the user did not define the configuration to get the macros and include directories from,
 			// we just choose the first one
@@ -565,12 +656,16 @@ void ExtractHeadersImpl::run()
 				make_absolute(precompiledHeaderFile, vcxproj_dir);
 				input.outputfile = precompiledHeaderFile;
 			}
-
-			make_absolute(input.outputfile, vcxproj_dir);
-
+			else {
+				make_absolute(input.outputfile, src_dir.empty() ? vcxproj_dir : src_dir);
+			}
 		} catch (runtime_error& ex) {
-			throw runtime_error(string("Cannot parse: ") + input.vcxproj + ": " + ex.what());
+			throw runtime_error(string("Cannot parse: ") + input.vcproj + ": " + ex.what());
 		}
+	}
+
+	if (exists(input.outputfile) && !input.force) {
+		throw runtime_error(string("Precompiled header already exists: ") + input.outputfile);
 	}
 
 	for (auto& input : input.inputs) {
@@ -593,10 +688,11 @@ void ExtractHeadersImpl::run()
 		}
 	}
 
-	if (!input.vcxproj.empty()) {
+	if (!input.vcproj.empty()) {
 		output.infoStream << endl;
 		output.infoStream << "********************************************************************************" << endl;
-		output.infoStream << "Generating precompiled header for " << input.vcxproj << endl;
+		output.infoStream << "Generating precompiled header for " << input.vcproj << endl;
+		output.infoStream << "Src dir:" << src_dir.string() << endl;
 	}
 	output.infoStream << "Processing " << userheadersqueue.size() << " reported includes" << endl;
 

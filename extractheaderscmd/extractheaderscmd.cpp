@@ -45,7 +45,7 @@ void readOptions(ExtractHeadersInput& input, int argc, char** argv)
 		"specify maximal include nesting depth (normally should be 0)")
 		("def,D", po::value<vector<string>>(&input.cxxflags)->composing(),
 		"macros to be defined. Separated by semicolon E.g. --def _M_X64;_WIN32;WIN32")
-		("vcxproj", po::value<string>(&input.vcxproj),
+		("vcproj", po::value<string>(&input.vcproj),
 		"The Visual Studio project file the precompiled header will be generated for. Used to get input file paths, macros, include directories and precompiled header location. "
         "Note that most of the Visual Studio build macros are not supported. Example of unsupported build macro: $(VSInstallDir). This option is incompatible with --sln")
 		("sln", po::value<string>(&input.sln),
@@ -56,6 +56,9 @@ void readOptions(ExtractHeadersInput& input, int argc, char** argv)
 		("pragma", "If specified, #pragma once will be added to the output, instead of the include guards")
 		("output,o", po::value<string>(&input.outputfile)->default_value("stdafx.h"),
 		"output file. This option will be ignored if the project file specified via --vcxproj or --sln already specify a precompiled header file")
+		("mostincluded,m", po::value<int>(&input.mostincluded)->default_value(0),
+		"mostincluded")
+		("force", "force")
 		("singlecore",
 		"Do not use multiple threads to process the input (applies only if the --sln option was specified)")
 		("verbose", "Verbose output")
@@ -114,7 +117,7 @@ int main(int argc, char** argv)
 		cout << endl;
 	}
 
-	if (!input.vcxproj.empty() && !input.sln.empty()) {
+	if (!input.vcproj.empty() && !input.sln.empty()) {
 		cerr << "Cannot specify options --vcxproj and --sln at the same time";
 		exit(EXIT_FAILURE);
 	}
@@ -124,8 +127,8 @@ int main(int argc, char** argv)
 			ExtractHeaders extractHeaders;
 			ExtractHeadersConsoleOutput output(cerr, cout);
 
-			extractHeaders.run(output, input);
-			extractHeaders.write_stdafx();
+			if (extractHeaders.run(output, input))
+				extractHeaders.write_stdafx();
 		}
 		else {
 			vector<Project> projects;
@@ -139,8 +142,12 @@ int main(int argc, char** argv)
 
 
 			for (auto& project : projects) {
+				if (project.location.find_first_of("..") == 0) {
+					cout << "Project skipped :" << project.location << endl;
+					continue;
+				}
 				make_absolute(project.location, absolute_path);
-				input.vcxproj = project.location;
+				input.vcproj = project.location;
 				futures.resize(futures.size() + 1);
 
 				futures.back() = async(std::launch::async, [&, input](){
@@ -149,8 +156,8 @@ int main(int argc, char** argv)
 					ExtractHeaders extractHeaders;
 					ExtractHeadersConsoleOutput output(errStream, outputStream);
 
-					extractHeaders.run(output, input);
-					extractHeaders.write_stdafx();
+					if (extractHeaders.run(output, input))
+						extractHeaders.write_stdafx();
 
 
 					{

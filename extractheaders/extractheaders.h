@@ -14,7 +14,7 @@ struct ExtractHeadersInput {
 	std::vector<std::string> sysincludedirs;
 	std::vector<std::string> sysincludetreedirs;
 	std::vector<std::string> cxxflags;
-	std::string vcxproj;
+	std::string vcproj;
 	std::string configuration;
 	std::string sln;
 	std::vector<std::string> excludedirs;
@@ -22,6 +22,8 @@ struct ExtractHeadersInput {
 
 	int nesting;
 	std::string outputfile;
+	int mostincluded;
+	bool force;
 	bool singlecore;
 	bool verbose;
 	bool pragma;
@@ -38,6 +40,7 @@ struct ExtractHeadersConsoleOutput {
 	// headersfound contains the headers inclusion, as they were found
 	// in the file. This is how they will be copied to the generated
 	// precompiled header, to keep relatives paths, case, etc.
+	std::map<std::string, int> headersfound_num;
 	std::vector<std::string> headersfound;
 	std::ostream& errorStream;
 	std::ostream& infoStream;
@@ -57,7 +60,7 @@ public:
 	void write_stdafx();
 	// @outputfile absolute path where the precompiled header should be written,
 	//
-	void run(ExtractHeadersConsoleOutput& output, const ExtractHeadersInput& input);
+	bool run(ExtractHeadersConsoleOutput& output, const ExtractHeadersInput& input);
 
 private:
 	std::unique_ptr<ExtractHeadersImpl> impl;
