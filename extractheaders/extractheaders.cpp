@@ -389,7 +389,7 @@ void ExtractHeadersImpl::process_file(const path& filename)
 		try {
 			++it;
 			// operator != could also throw an exception
-			is_end = it != end;
+			is_end = (it == end);
 		}
 		catch (boost::wave::cpplexer::lexing_exception const& e) {
 
