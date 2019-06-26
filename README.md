@@ -1,113 +1,29 @@
-# pct [![AppVeyor build](https://ci.appveyor.com/api/projects/status/uiue2rplcirf0a38?svg=true)](https://ci.appveyor.com/project/g-h-c/pct/)
+---
+typora-root-url: ./
+---
 
-Pct (PreCompiled header tool) aims to be a bag of tools to help reducing and analysing C/C++ compilation times. There is only one tool for now, extractheaders.
+### 修改说明
 
-## extractheaders
+在原版基础上，主要做了如下增强：
 
-Analyses C / C++ files to generate a precompiled header. It can get its input from Visual Studio project files (.vcxproj and .sln) or they can be specified explicitly through command line options. The precompiled header will consist of the standard headers that are included in the provided files (or any header included by the files recursively). It uses Boost Wave Preprocessor under the hood.
+1. 增加对VC2008(及其兼容工程)的支持，工程后缀为.vcproj
+2. 增加头文件包含次数统计，并增加命令行参数mostincluded指定过滤最小包含次数，0表示不过滤
+3. 增加命令行参数force控制是否覆盖stdafx.h文件
+4. 默认只输出系统头文件，也就是<>括起来的头文件，在命令行参数includeheader中增加了特殊设置，用于输出所有头文件，用法：--includeheader *
+5. 将stdafx.h文件输出到源代码目录，而不是输出到工程文件所在目录
+6. 自动生成stdafx.cpp文件
 
-extractheaders can read Visual Studio project files with the options --sln and --vcxproj. E.g.
 
---sln c:\\path\\to\\mysolution.sln --sysinclude "C:\\Program Files (x86)\\Microsoft Visual Studio 12.0\\VC\\include" --configuration "Debug|x64"
 
-This command line will parse all the .vcxproj in mysolution.sln, and will generate the precompiled headers according to the macros and include paths specified in the configuration Debug|x64
+### 集成到MSVC中
 
-If you do not have Visual Studio project files, you can specify which are your inputs like this:
+可以通过MSVC的"工具->外部工具"功能集成到IDE中，这样使用起来更方便，选中某个工程后，点击"工具->提取头文件"即可输出stdafx.h和stdafx.cpp到此工程源代码目录。
 
---sysinclude "C:\\Program Files (x86)\\Microsoft Visual Studio 12.0\\VC\\include" --sysinclude C:\\Qt\\Qt5.6.0\\5.6\\msvc2013_64\\include --sysinclude C:\\Qt\\Qt5.6.0\\5.6\\msvc2013_64\\include\\QtCore --def "_WIN32;WIN32;_M_X64_" --input c:\\path\\to\\file.cpp --include c:\\path\\to\\ 
+![1561518892864](/README/1561518892864.png)
 
-Applied to this file.cpp:
+完整的参数字段参考：
 
-```cpp
-#include <vector>
-#include <QtCore/QAtomicInt>
-#include <quuid.h>
-#include "myinclude.h"
-
-int main()
-{
-  // lots of interesting code here
-}
 ```
-
-where myinclude.h is:
-
-```cpp
-#include <array>
-#include <iostream>
+--vcproj $(ProjectDir)$(ProjectFileName) --sysinclude C:\greentools\ro\VC2008\VC\include --sysinclude C:\greentools\ro\VC2008\VC\PlatformSDK\Include --configuration "Debug|Win32" --force -m 10
 ```
-
-will generate this precompiled header:
-
-```cpp
-#ifndef STDAFX_H
-#define STDAFX_H
-#include <array>
-#include <iostream>
-#include <vector>
-#include <QtCore/QAtomicInt>
-#include <quuid.h>
-#endif
-```
-
-
-extractheaders can also be easily integrated with qmake. Imagine the previous example was built with this .pro file:
-
-```cpp
-HEADERS += myinclude.h
-SOURCES += file.cpp
-INCLUDEPATH += "."
-
-for (it, SOURCES) {    
-	INPUT_ARGUMENTS += --input \"$${it}\"
-}
-
-for (it, INCLUDEPATH) {    
-	INCLUDE_ARGUMENTS += --include \"$$PWD/$${it}\"
-}
-
-system(extractheaders --sysinclude \"c:\\Program Files (x86)\\Microsoft Visual Studio 12.0\\VC\\include\\" --sysincludetree C:\\Qt\\Qt5.6.0\\5.6\\msvc2013_64\\include --def "_WIN32;WIN32;_M_X64;_IOSTREAM_" $$INPUT_ARGUMENTS $$INCLUDE_ARGUMENTS) --excluderegexp "moc_.*"
-```
-
-system() will invoke extractheaders in this case, generating the appropiate stdafx.h. The first two loops will generate the necessary arguments that the tool needs. The option --sysincludetree comes in handy to include all the Qt include subfolders.
-
-The option --excluderegexp "moc_.*" avoids processing Qt moc-generated files, which otherwise will generate a lot of errors.
-
-It may also be easier to generate Visual Studio project files with qmake and then tell extractheaders to parse them: https://cppisland.wordpress.com/2015/11/15/cross-platform-development-with-c/
-
-The latest command line help is at: https://ci.appveyor.com/api/projects/g-h-c/pct/artifacts/extractheaderscmd/release/help.html?job=Environment%3A%20%3B%20Configuration%3A%20Release
-
-**Compilation**
-
-Requires boost libraries and C++ 11 compliant compiler. The environment variable BOOST_HOME needs to be set to point to the root of Boost libraries and BOOST_LIB needs to point the binaries. The least Boost version I tried was 1.58.0. I have only worked on 64 bits, a 32 bits build should work but I have not tested it. Althought the Visual Studio project files were generated with version 2015, the code compiles cleanly on 2013 as well (but you may need to select ```Visual Studio 2013 (v120)``` as Platform Toolset in Configuration Properties->General.
-
-Both qmake and Visual Studio project files are provided. The script genvs.bat could be used to generate the Visual Studio project files from the qmake ones.
-
-**Blog entries**
-
-https://cppisland.wordpress.com/2016/06/05/introducing-pct-a-tool-to-help-reducing-cc-compilation-times/
-
-https://cppisland.wordpress.com/2016/12/28/pct-1-0-supports-visual-studio-project-files-and-is-multithreaded/
-
-**Troubleshooting**
-
-> error: could not find include file: windows.h
-
-Add the path to Windows SDK user mode header files, for instance with: --sysinclude C:\Program Files (x86)\Windows Kits\8.1\Include\um
-
-> Could not find include file even if it is one of the specified include directories
-
-This may be caused by trying to include a system header using quotes, e.g. #include "string.h" or trying to include a user header using angle brackets, e.g. #include \<myinclude.h\>. Best solution would be to be consistent with the normal convention, use quotes for user headers and angle bracket for system headers.
-
-> pct hangs or says: error: ill formed preprocessor directive: #include "aheader.h"
-
-This may be cause because one the preprocessed files does not include an end-of-line at the end of the file.
-
-> error: Windows Kits\8.1\Include\shared\ws2def.h(221): error C2011: 'sockaddr' : 'struct' type redefinition
-
-winsock2.h and windows.h are sensitive to the order in which they are included. winsock2.h must be included before windows.h or you can #define WIN32_LEAN_AND_MEAN if you do not need rarely used windows.h stuff
-
-
-
-
 
