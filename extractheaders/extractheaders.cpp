@@ -415,9 +415,9 @@ void ExtractHeadersImpl::write_stdafx()
 	path outputpath(input.outputfile);
 	string guardname = outputpath.filename().string();
 	size_t dotpos = guardname.find_first_of(".");
-	ofstream outputStream;
+	std::ofstream outputStream;
 
-    outputStream = ofstream(input.outputfile);
+    outputStream = std::ofstream(input.outputfile);
 	guardname = guardname.substr(0, dotpos);
 
 	for (auto & c : guardname)
@@ -498,9 +498,9 @@ void splitInput(vector<string>& elems, const string& inputstr)
 // @throws runtime_error if an input path does no exist
 void ExtractHeadersImpl::run()
 {
-	if (!input.vcxproj.empty()) {
+	if (!input.vcproj.empty()) {
 		try {
-			VcxprojParsing parser(input.vcxproj.c_str(), output.errorStream);
+			VcprojParsing parser(input.vcproj.c_str(), output.errorStream);
 			vector<ProjectConfiguration> configurations;
 			vector<ProjectConfiguration>::iterator configuration_it;
 			vector<string> files;
@@ -508,12 +508,12 @@ void ExtractHeadersImpl::run()
 			string additionalIncludeDirectories;
 			string precompiledHeaderFile;
 			string configurationName;
-			path vcxproj_dir = canonical(path(input.vcxproj).remove_filename());
+			path vcxproj_dir = canonical(path(input.vcproj).remove_filename());
 
 			parser.parse(configurations, files);
 
 			if (configurations.empty())
-				throw runtime_error("File: " + input.vcxproj + " contains no configurations");
+				throw runtime_error("File: " + input.vcproj + " contains no configurations");
 
 			// if the user did not define the configuration to get the macros and include directories from,
 			// we just choose the first one
@@ -569,7 +569,7 @@ void ExtractHeadersImpl::run()
 			make_absolute(input.outputfile, vcxproj_dir);
 
 		} catch (runtime_error& ex) {
-			throw runtime_error(string("Cannot parse: ") + input.vcxproj + ": " + ex.what());
+			throw runtime_error(string("Cannot parse: ") + input.vcproj + ": " + ex.what());
 		}
 	}
 
@@ -593,10 +593,10 @@ void ExtractHeadersImpl::run()
 		}
 	}
 
-	if (!input.vcxproj.empty()) {
+	if (!input.vcproj.empty()) {
 		output.infoStream << endl;
 		output.infoStream << "********************************************************************************" << endl;
-		output.infoStream << "Generating precompiled header for " << input.vcxproj << endl;
+		output.infoStream << "Generating precompiled header for " << input.vcproj << endl;
 	}
 	output.infoStream << "Processing " << userheadersqueue.size() << " reported includes" << endl;
 

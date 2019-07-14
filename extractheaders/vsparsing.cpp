@@ -1,5 +1,6 @@
 #include "vsparsing.h"
 #include <boost/filesystem/path.hpp>
+#include <boost/algorithm/string.hpp>
 #include <stdexcept>
 #include <vector>
 #include <string>
@@ -11,7 +12,7 @@ using namespace tinyxml2;
 using namespace boost::filesystem;
 using namespace std;
 
-VcxprojParsing::VcxprojParsing(const char* path,
+VcprojParsing::VcprojParsing(const char* path,
 	                           std::ostream& errStream)
 	: errorStream(errStream)
 {			
@@ -22,11 +23,14 @@ VcxprojParsing::VcxprojParsing(const char* path,
 	
 	filepath = boost::filesystem::path(path);	
 
-	if (filepath.extension().string() == ".vcproj")
-		errStream << "Warning: when reading: " << path << ". vcproj files are not supported. Please upgrade your solution to a Visual Studio 2010 solution or later";
+	auto fileext = filepath.extension().string();
+	if (fileext == ".vcxproj")
+		isvcxproj = true;
+	else if (fileext != ".vcproj")
+		errStream << "Error: when reading: " << path << ". only vcproj or vcxproj files are supported.";
 }
 
-void VcxprojParsing::replaceEnvVars(string& paths)
+void VcprojParsing::replaceEnvVars(string& paths)
 {	
 	// both %MYVAR% or $(MYVAR) syntaxes would be expanded as environment
 	// variables in .vcxproj 
@@ -77,7 +81,16 @@ void VcxprojParsing::replaceEnvVars(string& paths)
 
 }
 
-void VcxprojParsing::parse(vector<ProjectConfiguration>& configurations,
+void VcprojParsing::parse(vector<ProjectConfiguration>& configurations,
+	vector<string>& files)
+{
+	if (isvcxproj)
+		parsevcxproj(configurations, files);
+	else
+		parsevcproj(configurations, files);
+}
+
+void VcprojParsing::parsevcxproj(vector<ProjectConfiguration>& configurations,
 	                  vector<string>& files)
 {
 	XMLElement* project = project = doc.FirstChildElement("Project");
@@ -137,6 +150,10 @@ void VcxprojParsing::parse(vector<ProjectConfiguration>& configurations,
 
 					if (precompiledHeaderFile && precompiledHeaderFile->FirstChild()) {
 						configuration.precompiledHeaderFile = precompiledHeaderFile->FirstChild()->ToText()->Value();
+						if (configuration.precompiledHeaderFile.length() >= 2
+							&& configuration.precompiledHeaderFile[0] == '"'
+							&& configuration.precompiledHeaderFile[configuration.precompiledHeaderFile.length() - 1] == '"')
+							configuration.precompiledHeaderFile = configuration.precompiledHeaderFile.substr(1, configuration.precompiledHeaderFile.length() - 2);
 						replaceEnvVars(configuration.precompiledHeaderFile);
 					}
 
@@ -147,10 +164,74 @@ void VcxprojParsing::parse(vector<ProjectConfiguration>& configurations,
 	}
 }
 
+
+void VcprojParsing::parsevcproj(vector<ProjectConfiguration>& configurations,
+	vector<string>& files)
+{
+	XMLElement* project = doc.FirstChildElement("VisualStudioProject");
+	if (!project)
+		return;
+
+	XMLElement* projectconfigurations = project->FirstChildElement("Configurations");
+	XMLElement* configurationelement = projectconfigurations->FirstChildElement("Configuration");
+	const char* label = configurationelement->Attribute("Name");
+	std::vector<std::string> results;
+	boost::algorithm::split(results, label, boost::is_any_of(","));
+	ProjectConfiguration configuration = { label, results.empty() ? "" : results[0] };
+
+	XMLElement* clCompile = configurationelement->FirstChildElement("Tool");
+	while (clCompile) {
+		const char* label = clCompile->Attribute("Name");
+		if (label && !strcmp(label, "VCCLCompilerTool")) {
+			const char * attr = clCompile->Attribute("PreprocessorDefinitions");
+			if (attr) {
+				configuration.definitions = attr;
+				replaceEnvVars(configuration.definitions);
+
+				// replace things like %(PreprocessorDefinitions) which extract headers cannot understand
+				configuration.definitions = regex_replace(configuration.definitions, regex("%\\(.*\\)"), string(""));
+			}
+
+			attr = clCompile->Attribute("AdditionalIncludeDirectories");
+			if (attr) {
+				configuration.additionalIncludeDirectories = attr;
+				replaceEnvVars(configuration.additionalIncludeDirectories);
+			}
+
+			attr = clCompile->Attribute("PrecompiledHeaderThrough");
+			if (attr) {
+				configuration.precompiledHeaderFile = attr;
+				if (configuration.precompiledHeaderFile.length() >= 2
+					&& configuration.precompiledHeaderFile[0] == '"'
+					&& configuration.precompiledHeaderFile[configuration.precompiledHeaderFile.length() - 1] == '"')
+					configuration.precompiledHeaderFile = configuration.precompiledHeaderFile.substr(1, configuration.precompiledHeaderFile.length() - 2);
+				replaceEnvVars(configuration.precompiledHeaderFile);
+			}
+		}
+		clCompile = clCompile->NextSiblingElement("Tool");
+	}
+
+	configurationelement = configurationelement->NextSiblingElement("Configuration");
+	configurations.push_back(configuration);
+
+	XMLElement* fileselement = project->FirstChildElement("Files");
+	if (fileselement) {
+		XMLElement* filter = fileselement->FirstChildElement("Filter");
+		while (filter) {
+			XMLElement* file = filter->FirstChildElement("File");
+			while (file) {
+				files.push_back(file->Attribute("RelativePath"));
+				file = file->NextSiblingElement("File");
+			}
+			filter = filter->NextSiblingElement("Filter");
+		}
+	}
+}
+
 SlnParsing::SlnParsing(const char* path, std::ostream& errStream)
 	: errorStream(errStream)
 {
-	ifstream file(path);
+	std::ifstream file(path);
 	string line;
 
 	while (getline(file, line)) {

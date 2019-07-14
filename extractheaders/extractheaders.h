@@ -14,7 +14,7 @@ struct ExtractHeadersInput {
 	std::vector<std::string> sysincludedirs;
 	std::vector<std::string> sysincludetreedirs;
 	std::vector<std::string> cxxflags;
-	std::string vcxproj;
+	std::string vcproj;
 	std::string configuration;
 	std::string sln;
 	std::vector<std::string> excludedirs;
