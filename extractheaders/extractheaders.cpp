@@ -46,7 +46,7 @@ public:
 			impl->systemheaders.insert(relname);
 		else {
 			if (find(impl->input.excludeheaders.begin(), impl->input.excludeheaders.end(), filename) == impl->input.excludeheaders.end()) {
-				if (!is_system_include)
+				if (!is_system_include && !impl->include_all())
 					impl->userheadersqueue.push(boost::filesystem::canonical(absname));
 				else
 					if (!subpath(impl->input.excludedirs, absname))
@@ -88,6 +88,10 @@ public:
 	void add_user_includes(context_type& ctx, const boost::filesystem::path& filename);
 	void write_stdafx();
 	void run();
+	bool include_all()
+	{
+		return find(input.includeheaders.begin(), input.includeheaders.end(), "*") != input.includeheaders.end();
+	}
 
 	queue<path> userheadersqueue;
 	set<path> headersprocessed;
