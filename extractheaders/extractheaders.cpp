@@ -477,6 +477,18 @@ void ExtractHeadersImpl::write_stdafx()
     outputStream = std::ofstream(input.outputfile);
 	guardname = guardname.substr(0, dotpos);
 
+	path outputSrcPath = outputpath.remove_filename() / path(guardname + ".cpp");
+	if (!exists(outputSrcPath)) {
+		std::ofstream outputSrcStream = std::ofstream(outputSrcPath.string());
+
+		if (!outputSrcStream.is_open()) {
+			cerr << "Cannot open: " << outputSrcPath.string();
+			exit(EXIT_FAILURE);
+		}
+
+		outputSrcStream << "#include \"" << guardname << ".h\"\n";
+	}
+
 	for (auto & c : guardname)
 		c = toupper(c);
 
