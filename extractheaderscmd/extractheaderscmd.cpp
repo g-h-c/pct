@@ -142,6 +142,10 @@ int main(int argc, char** argv)
 
 
 			for (auto& project : projects) {
+				if (project.location.find_first_of("..") == 0) {
+					cout << "Project skipped :" << project.location << endl;
+					continue;
+				}
 				make_absolute(project.location, absolute_path);
 				input.vcproj = project.location;
 				futures.resize(futures.size() + 1);
