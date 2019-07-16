@@ -132,6 +132,26 @@ ExtractHeaders::~ExtractHeaders()
 {
 }
 
+int getcommonsize(path filepath, path projectdir)
+{
+	int commonsize = 0;
+	auto itfile = filepath.rbegin();
+	auto itprojdir = projectdir.rbegin();
+	for (; itfile != filepath.rend() && itprojdir != projectdir.rend();) {
+		if (*itfile != *itprojdir) {
+			if (commonsize > 0)
+				break;
+			else
+				++itfile;
+		}
+		else {
+			++itfile;
+			++itprojdir;
+			++commonsize;
+		}
+	}
+	return commonsize;
+}
 bool iscplusplusfile(path filepath)
 {
 	const char* extensions[] =
@@ -152,6 +172,23 @@ bool iscplusplusfile(path filepath)
 	}
 
 	return false;
+}
+
+path getsrcdir(const vector<string>& files, path projectdir)
+{
+	path src_dir;
+	int curcommonsize = 0;
+	for (auto file : files) {
+		auto filepath = canonical(path(file).remove_filename());
+		if (iscplusplusfile(file)) {
+			int commonsize = getcommonsize(filepath, projectdir);
+			if (commonsize > curcommonsize) {
+				src_dir = filepath;
+				curcommonsize = commonsize;
+			}
+		}
+	}
+	return src_dir;
 }
 
 // gets all files in a dir (non-recursively)
@@ -495,6 +532,7 @@ void ExtractHeadersImpl::write_stdafx()
 // @throws runtime_error if an input path does no exist
 void ExtractHeadersImpl::run()
 {
+	path src_dir;
 	if (!input.vcproj.empty()) {
 		try {
 			VcprojParsing parser(input.vcproj.c_str(), output.errorStream);
@@ -508,6 +546,7 @@ void ExtractHeadersImpl::run()
 			path vcxproj_dir = canonical(path(input.vcproj).remove_filename());
 
 			parser.parse(configurations, files);
+			src_dir = getsrcdir(files, vcxproj_dir);
 
 			if (configurations.empty())
 				throw runtime_error("File: " + input.vcproj + " contains no configurations");
@@ -562,9 +601,8 @@ void ExtractHeadersImpl::run()
 				make_absolute(precompiledHeaderFile, vcxproj_dir);
 				input.outputfile = precompiledHeaderFile;
 			}
-
-			make_absolute(input.outputfile, vcxproj_dir);
-
+			else
+				make_absolute(input.outputfile, src_dir.empty() ? vcxproj_dir : src_dir);
 		} catch (runtime_error& ex) {
 			throw runtime_error(string("Cannot parse: ") + input.vcproj + ": " + ex.what());
 		}
