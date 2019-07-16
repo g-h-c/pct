@@ -58,6 +58,7 @@ void readOptions(ExtractHeadersInput& input, int argc, char** argv)
 		"output file. This option will be ignored if the project file specified via --vcxproj or --sln already specify a precompiled header file")
 		("mostincluded,m", po::value<int>(&input.mostincluded)->default_value(0),
 		"mostincluded")
+		("force", "force")
 		("singlecore",
 		"Do not use multiple threads to process the input (applies only if the --sln option was specified)")
 		("verbose", "Verbose output")
@@ -126,8 +127,8 @@ int main(int argc, char** argv)
 			ExtractHeaders extractHeaders;
 			ExtractHeadersConsoleOutput output(cerr, cout);
 
-			extractHeaders.run(output, input);
-			extractHeaders.write_stdafx();
+			if (extractHeaders.run(output, input))
+				extractHeaders.write_stdafx();
 		}
 		else {
 			vector<Project> projects;
@@ -151,8 +152,8 @@ int main(int argc, char** argv)
 					ExtractHeaders extractHeaders;
 					ExtractHeadersConsoleOutput output(errStream, outputStream);
 
-					extractHeaders.run(output, input);
-					extractHeaders.write_stdafx();
+					if (extractHeaders.run(output, input))
+						extractHeaders.write_stdafx();
 
 
 					{

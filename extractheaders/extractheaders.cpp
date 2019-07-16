@@ -293,14 +293,16 @@ void ExtractHeaders::write_stdafx()
 	impl->write_stdafx();
 }
 
-void ExtractHeaders::run(ExtractHeadersConsoleOutput& output, const ExtractHeadersInput& input)
+bool ExtractHeaders::run(ExtractHeadersConsoleOutput& output, const ExtractHeadersInput& input)
 {
 	impl.reset(new ExtractHeadersImpl(output, input));
 	try {
 		impl->run();
+		return true;
 	}
 	catch (std::exception& e) {
 		output.errorStream << e.what() << endl;
+		return false;
 	}
 }
 
@@ -463,6 +465,10 @@ void ExtractHeadersImpl::process_file(const path& filename)
 
 void ExtractHeadersImpl::write_stdafx()
 {
+	if (systemheaders.empty()) {
+		output.infoStream << "No system header found." << endl;
+		return;
+	}
 	path outputpath(input.outputfile);
 	string guardname = outputpath.filename().string();
 	size_t dotpos = guardname.find_first_of(".");
@@ -606,6 +612,10 @@ void ExtractHeadersImpl::run()
 		} catch (runtime_error& ex) {
 			throw runtime_error(string("Cannot parse: ") + input.vcproj + ": " + ex.what());
 		}
+	}
+
+	if (exists(input.outputfile) && !input.force) {
+		throw runtime_error(string("Precompiled header already exists: ") + input.outputfile);
 	}
 
 	for (auto& input : input.inputs) {

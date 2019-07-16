@@ -23,6 +23,7 @@ struct ExtractHeadersInput {
 	int nesting;
 	std::string outputfile;
 	int mostincluded;
+	bool force;
 	bool singlecore;
 	bool verbose;
 	bool pragma;
@@ -59,7 +60,7 @@ public:
 	void write_stdafx();
 	// @outputfile absolute path where the precompiled header should be written,
 	//
-	void run(ExtractHeadersConsoleOutput& output, const ExtractHeadersInput& input);
+	bool run(ExtractHeadersConsoleOutput& output, const ExtractHeadersInput& input);
 
 private:
 	std::unique_ptr<ExtractHeadersImpl> impl;
