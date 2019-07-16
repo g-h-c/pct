@@ -78,6 +78,24 @@ typedef boost::wave::context<
 	boost::wave::iteration_context_policies::load_file_to_string,
 	find_includes_hooks<token_type> > context_type;
 
+// splits a semicolon-separated list of words and returns a vector
+void splitInput(vector<string>& elems, const string& inputstr)
+{
+	string elem;
+
+	if (!inputstr.empty()) {
+		for (auto character : inputstr) {
+			if (character == ';') {
+				elems.push_back(elem);
+				elem.clear();
+			}
+			else
+				elem += character;
+		}
+
+		elems.push_back(elem);
+	}
+}
 
 class ExtractHeadersImpl {
 public:
@@ -249,20 +267,10 @@ void ExtractHeaders::run(ExtractHeadersConsoleOutput& output, const ExtractHeade
 
 void ExtractHeadersImpl::add_macro_definitions(context_type& context, const string& cxx_flags)
 {
-	string definition;
-
-	if (!cxx_flags.empty()) {
-		for (auto elem : cxx_flags) {
-			if (elem == ';') {
-				context.add_macro_definition(definition, false);
-				definition.clear();
-			}
-			else
-				definition += elem;
-		}
-
+	std::vector<std::string> definitions;
+	splitInput(definitions, cxx_flags);
+	for (auto definition : definitions)
 		context.add_macro_definition(definition, false);
-	}
 }
 
 
@@ -477,25 +485,6 @@ void ExtractHeadersImpl::write_stdafx()
 		outputStream << "#endif\n";
 
 	output.infoStream << "Precompiled header generated at: " << canonical(input.outputfile).string() << endl;
-}
-
-// splits a semicolon-separated list of words and returns a vector
-void splitInput(vector<string>& elems, const string& inputstr)
-{
-	string elem;
-
-	if (!inputstr.empty()) {
-		for (auto character : inputstr) {
-			if (character == ';') {
-				elems.push_back(elem);
-				elem.clear();
-			}
-			else
-				elem += character;
-		}
-
-		elems.push_back(elem);
-	}
 }
 
 
