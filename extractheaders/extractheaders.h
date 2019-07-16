@@ -22,6 +22,7 @@ struct ExtractHeadersInput {
 
 	int nesting;
 	std::string outputfile;
+	int mostincluded;
 	bool singlecore;
 	bool verbose;
 	bool pragma;
@@ -38,6 +39,7 @@ struct ExtractHeadersConsoleOutput {
 	// headersfound contains the headers inclusion, as they were found
 	// in the file. This is how they will be copied to the generated
 	// precompiled header, to keep relatives paths, case, etc.
+	std::map<std::string, int> headersfound_num;
 	std::vector<std::string> headersfound;
 	std::ostream& errorStream;
 	std::ostream& infoStream;

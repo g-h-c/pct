@@ -56,6 +56,8 @@ void readOptions(ExtractHeadersInput& input, int argc, char** argv)
 		("pragma", "If specified, #pragma once will be added to the output, instead of the include guards")
 		("output,o", po::value<string>(&input.outputfile)->default_value("stdafx.h"),
 		"output file. This option will be ignored if the project file specified via --vcxproj or --sln already specify a precompiled header file")
+		("mostincluded,m", po::value<int>(&input.mostincluded)->default_value(0),
+		"mostincluded")
 		("singlecore",
 		"Do not use multiple threads to process the input (applies only if the --sln option was specified)")
 		("verbose", "Verbose output")

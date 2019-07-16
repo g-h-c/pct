@@ -66,7 +66,9 @@ public:
 	bool found_include_directive(Context const& ctx,
 		std::string const &filename, bool include_next)
 	{
-		impl->output.headersfound.push_back(filename);
+		if (impl->output.headersfound_num.find(filename) == impl->output.headersfound_num.end())
+			impl->output.headersfound.push_back(filename);
+		++(impl->output.headersfound_num[filename]);
 		return false;
 	}
 
@@ -449,35 +451,37 @@ void ExtractHeadersImpl::write_stdafx()
 		outputStream << "#define " + guardname + "_H\n";
 	}
 
-
-	for (const auto& header : systemheaders) {
-		string headername = header.filename().string();
-		auto header_it = output.headersfound.begin();
-
-		while (header_it != output.headersfound.end()) {
-			regex rg = regex(".*\\b" + headername + "\\b.*");
-
-			if (regex_match(*header_it, rg)) {
-				string trimmed_headername = trim(*header_it);
-
-				if (trimmed_headername.size() >= 2 &&
-					(trimmed_headername)[0] == '"' &&
-					trimmed_headername[trimmed_headername.size() - 1] == '"') {
-					string unquoted = trimmed_headername;
-
-					unquoted.erase(0, 1);
-					unquoted.resize(unquoted.size() - 1);
-
-					if (find(input.includeheaders.begin(), input.includeheaders.end(), unquoted) == input.includeheaders.end())
-						break;
-				}
-
-				outputStream << "#include " << *header_it << "\n";
-				output.headersfound.erase(header_it);
-				break;
-
+	if (input.mostincluded > 0) {
+		std::vector<pair<string, int>> vt(output.headersfound_num.begin(), output.headersfound_num.end());
+		sort(vt.begin(), vt.end(), [](const pair<string, int>& lhs, const pair<string, int>& rhs) -> bool {return lhs.second > rhs.second; });
+		for (auto header_num : vt) {
+			output.infoStream << header_num.first << ": " << header_num.second << endl;
+			if (header_num.second >= input.mostincluded) {
+				outputStream << "#include " << header_num.first << "\n";
 			}
-			header_it++;
+		}
+	}
+	else {
+		for (auto& header : output.headersfound) {
+			string trimmed_headername = trim(header);
+			string unquoted = trimmed_headername.substr(1, trimmed_headername.length() - 2);
+			auto header_it = systemheaders.begin();
+			while (header_it != systemheaders.end()) {
+				string headername = header_it->filename().string();
+				if (headername.find_last_of(unquoted) != std::string::npos) {
+					if (!include_all() && trimmed_headername.size() >= 2 &&
+						(trimmed_headername)[0] == '"' &&
+						trimmed_headername[trimmed_headername.size() - 1] == '"') {
+						if (find(input.includeheaders.begin(), input.includeheaders.end(), unquoted) == input.includeheaders.end())
+							break;
+					}
+
+					outputStream << "#include " << header << "\n";
+					systemheaders.erase(header_it);
+					break;
+				}
+				header_it++;
+			}
 		}
 	}
 
