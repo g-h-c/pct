@@ -27,10 +27,14 @@ public:
 	// @throw std::runtime_error If the file could not be opened
 	VcxprojParsing(const char* path, std::ostream& errStream);
 	void parse(std::vector<ProjectConfiguration>& configurations,
-			   std::vector<std::string>& files);	
+			   std::vector<std::string>& files);
+
+	// VS2008 or earlier
+	void parseLegacy(std::vector<ProjectConfiguration>& configurations,
+		             std::vector<std::string>& files);
 	void replaceEnvVars(std::string& paths);
 private:
-
+	boost::filesystem::path filepath;
 	tinyxml2::XMLDocument doc;
 	std::ostream& errorStream;
 };

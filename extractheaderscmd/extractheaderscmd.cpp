@@ -81,7 +81,7 @@ void readOptions(ExtractHeadersInput& input, int argc, char** argv)
 	if (vm.count("help") > 0) {
 		stringstream help_stream;
 
-		help_stream << "Analyses C / C++ file to generate a precompiled header. The precompiled header will consist of the standard headers that are included in the provided files (or any header included by the files recursively)." << endl;
+		help_stream << "Analyses C / C++ files to generate a precompiled header. The precompiled header will consist of the standard headers that are included in the provided files (or any header included by the files recursively)." << endl;
 		help_stream << desc_options;
 		cout << help_stream.str();
 		exit(EXIT_SUCCESS);

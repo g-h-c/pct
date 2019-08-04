@@ -388,8 +388,8 @@ void ExtractHeadersImpl::process_file(const path& filename)
 
 		try {
 			++it;
-			// operator != could also throw an exception
-			is_end = it != end;
+			// operator == could also throw an exception
+			is_end = it == end;
 		}
 		catch (boost::wave::cpplexer::lexing_exception const& e) {
 
@@ -415,9 +415,9 @@ void ExtractHeadersImpl::write_stdafx()
 	path outputpath(input.outputfile);
 	string guardname = outputpath.filename().string();
 	size_t dotpos = guardname.find_first_of(".");
-	ofstream outputStream;
+	std::ofstream outputStream;
 
-    outputStream = ofstream(input.outputfile);
+    outputStream = std::ofstream(input.outputfile);
 	guardname = guardname.substr(0, dotpos);
 
 	for (auto & c : guardname)
