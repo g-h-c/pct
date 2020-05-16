@@ -75,7 +75,7 @@ The option --excluderegexp "moc_.*" avoids processing Qt moc-generated files, wh
 
 It may also be easier to generate Visual Studio project files with qmake and then tell extractheaders to parse them: https://cppisland.wordpress.com/2015/11/15/cross-platform-development-with-c/
 
-The latest command line help is at: https://ci.appveyor.com/api/projects/g-h-c/pct/artifacts/extractheaderscmd/release/help.html?job=Environment%3A%20%3B%20Configuration%3A%20Release
+The latest command line help is at the [wiki](https://github.com/g-h-c/pct/wiki)
 
 **Compilation**
 
